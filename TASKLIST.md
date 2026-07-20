@@ -54,11 +54,27 @@
 - [x] Deterministic simulation; warnings prioritized critical → caution → advisory
 - [x] npm test (75 tests) and npm run build pass
 
-## Milestone 4 — UI, Reports and Scenarios (NEXT)
-- [ ] Scenario save/load (JSON) and comparison
-- [ ] Front/top/force/brake-detail views
-- [ ] Report exports (CSV/JSON, crane-company sheet)
-- [ ] BOM and cost panels
+## Milestone 4 — Engineering Workflow, Scenarios, and Reports (COMPLETE)
+- [x] Scenario create, duplicate, rename, delete, import, export using versioned JSON (schema v2, envelope with fileType/appVersion/date)
+- [x] Schema migration v1 → v2: missing Milestone-3 fields filled with labeled PROVISIONAL defaults, every fill disclosed as a migration note
+- [x] Import validation: type-checked fields, whitelisted enums, unknown fields dropped, invalid files rejected with explicit errors
+- [x] localStorage persistence with corrupt-data recovery (discard + visible notice + example fallback, never silent use)
+- [x] Workflow navigation: Setup / Static Analysis / Dynamic Analysis / Compare / Report tabs
+- [x] Assumptions register and unresolved-input register visible in the interface (Setup tab)
+- [x] Status summary engine with five categories: ok / caution / failed / insufficient / error; static checks swept over 21 trolley positions for peaks
+- [x] Results traceability: every summary item carries units kind, solver/model, source inputs, and applicable assumptions (tooltips in Compare, columns in Report)
+- [x] Comparison view: selected scenarios side by side with status coloring, critical warnings, validation counts, empty state
+- [x] Printable engineering report: metadata (config/date/revision/schema), results summary with traceability, system diagram, time-history plots, full input tables with PROVISIONAL flags, validation issues, persistent disclaimer; browser print/PDF (no server)
+- [x] CSV export: summary results (SI units + status + traceability) and dynamic time histories; un-entered ratings export as 'insufficient' with EMPTY value — never zero
+- [x] Accessibility: toolbar/tablist roles, aria-selected, focus-visible outlines, keyboard-reachable controls, empty/error states
+- [x] 16 new Vitest tests: round-trip serialization, bare-object import, unknown-field dropping, invalid JSON/fileType/schema/enum rejection, v1→v2 migration + solver usability of migrated data, status categories (insufficient never zero/acceptable), overall-status propagation, report data assembly, CSV content and escaping
+- [x] npm test (91 tests) and npm run build pass
+
+## Milestone 5 — Validation and Release (NEXT)
+- [ ] Benchmark validation panel (expected vs calculated, tolerance, pass/fail)
+- [ ] Cross-check against hand-calculation documentation
+- [ ] Known-limitations documentation
+- [ ] Release packaging
 
 ## Assumptions register
 - Master node horizontal station equals launch-anchor offset from launch station.

@@ -111,8 +111,8 @@ export interface DynamicsSettings {
 }
 
 export interface Scenario {
-  /** Schema version for future migration */
-  schemaVersion: 1;
+  /** Schema version for migration (v1 = M2 era, v2 adds M3 dynamics fields) */
+  schemaVersion: 2;
   name: string;
   /** True when the scenario is an unverified example, not validated data */
   isUnverifiedExample: boolean;

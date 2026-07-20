@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.5.0 — Milestone 4: Engineering Workflow, Scenarios, and Reports
+- Added versioned scenario serialization (schema v2) with export envelope, strict structural import validation (typed fields, whitelisted enums, unknown fields dropped), and v1→v2 migration that fills missing Milestone-3 fields with labeled PROVISIONAL defaults and discloses every fill as a migration note (`src/models/scenarioSerialization.ts`).
+- Rebuilt the store as a multi-scenario library: create, duplicate, rename, delete, import, export, active selection, and compare selection, persisted to localStorage with corrupt-data recovery (discard + visible notice + built-in example fallback) (`src/state/store.ts`).
+- Added the status summary engine with five status categories — ok, caution, failed, insufficient (not evaluated, never shown as zero/acceptable), and error — computing static peaks over a 21-position trolley sweep plus dynamic simulation results, with per-item traceability (units kind, solver/model, source inputs, assumptions) (`src/calculations/statusSummary.ts`).
+- Added workflow navigation tabs (Setup / Static Analysis / Dynamic Analysis / Compare / Report) and a scenario toolbar (`src/App.tsx`, `src/components/ScenarioBar.tsx`).
+- Added the assumptions and unresolved-input registers to the interface, combined with live solver assumptions for the active scenario (`src/components/RegistersPanel.tsx`).
+- Added the comparison view: selected scenarios side by side with status coloring, critical warnings, validation counts, traceability tooltips, and an empty state (`src/components/CompareView.tsx`).
+- Added the printable engineering report: project metadata (configuration, date, application revision, schema version, data status), results summary with solver/assumption columns, embedded system diagram and time-history plots, complete input tables with PROVISIONAL flags and NOT ENTERED markers, validation issues, and the persistent disclaimer; browser print/Save-as-PDF with print CSS, no server required (`src/components/ReportView.tsx`, `src/reports/reportData.ts`).
+- Added CSV export for summary results (SI values, status, traceability, disclaimer; insufficient checks export an empty value — never zero) and dynamic time histories (`src/reports/csv.ts`).
+- Added WeakMap-memoized summary computation shared by Compare and Report (`src/state/useSummary.ts`).
+- Accessibility: toolbar/tablist roles, aria-selected tabs, focus-visible outlines, labeled controls, and useful empty/error states.
+- Added 16 Vitest tests covering serialization round-trip, import rejection paths, migration disclosure and migrated-data solver usability, status categories, report data assembly, and CSV content/escaping (`src/tests/scenarioWorkflow.test.ts`).
+- Total test count: 91 (15 units + 13 validation + 27 static + 20 dynamics + 16 workflow).
+
 ## v0.4.0 — Milestone 3: Trolley Dynamics and Progressive Braking
 - Added trolley path builder: influence line of the parabolic cable (elevation of the load point with the trolley at x), analytic slope, arc-length parameterization with interpolators, and uphill-segment detection (`src/calculations/trolleyPath.ts`).
 - Added time-step trolley dynamics solver: classical RK4 on (s, v) with gravity along the local path tangent, rolling resistance (C_rr·m·g·cosθ), aerodynamic drag on relative wind, along-track wind, and one-directional motion clamping; termination on stop, stall, end-of-path, time limit, or non-finite state, all reported — never NaN (`src/calculations/trolleyDynamics.ts`).

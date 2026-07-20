@@ -8,7 +8,7 @@ import { ftToM, inToM, lbToKg, lbfToN, mphToMps } from '../units/units';
  * manufacturer data, or professional approval before use.
  */
 export const exampleScenario: Scenario = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   name: 'Baseline 200 ft x 1,000 ft (UNVERIFIED EXAMPLE)',
   isUnverifiedExample: true,
   site: {
