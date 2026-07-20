@@ -55,3 +55,16 @@ body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: va
 .blocked { color: var(--error); font-weight: 600; font-size: 0.85rem; }
 .note { font-size: 0.78rem; color: #6b7a88; }
 .disclaimer { padding: 10px 18px; background: #fffbeb; border-top: 2px solid var(--warn); font-size: 0.8rem; color: #7c5806; }
+/* M2: cable profiles */
+.cable-profile { fill: none; stroke-width: 2; }
+.backstay-profile { stroke: #b45309; }
+.unloaded-profile { stroke: #64748b; stroke-dasharray: 4 3; }
+.loaded-profile { stroke: #b91c1c; }
+/* M2: trolley slider */
+.trolley-slider { padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 0 0 6px 6px; margin-top: -1px; font-size: 0.85rem; }
+.trolley-slider input[type=range] { width: 100%; margin-top: 4px; }
+/* M2: results details */
+.results-panel details { border-top: 1px solid var(--line); padding: 4px 0; }
+.results-panel summary { cursor: pointer; font-weight: 600; font-size: 0.88rem; padding: 3px 0; }
+.row-warn td { color: var(--error); font-weight: 600; }
+.solver-warn-heading { font-size: 0.85rem; margin: 8px 0 4px; color: var(--warn); }
