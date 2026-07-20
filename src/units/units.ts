@@ -48,6 +48,16 @@ export const mpsToMph = (mps: number): number => mps * MPH_PER_MPS;
 export const fToC = (f: number): number => ((f - 32) * 5) / 9;
 export const cToF = (c: number): number => (c * 9) / 5 + 32;
 
+// area (1 ft² = 0.3048² m², exact)
+export const M2_PER_FT2 = M_PER_FT * M_PER_FT;
+export const ft2ToM2 = (ft2: number): number => ft2 * M2_PER_FT2;
+export const m2ToFt2 = (m2: number): number => m2 / M2_PER_FT2;
+
+// energy (1 ft·lbf = 1 lbf × 1 ft = 4.4482216152605 N × 0.3048 m, exact)
+export const J_PER_FTLBF = N_PER_LBF * M_PER_FT;
+export const jToFtLbf = (j: number): number => j / J_PER_FTLBF;
+export const ftLbfToJ = (ftLbf: number): number => ftLbf * J_PER_FTLBF;
+
 // mass per unit length (cable linear density)
 export const lbPerFtToKgPerM = (lbPerFt: number): number =>
   (lbPerFt * KG_PER_LB) / M_PER_FT;
@@ -75,4 +85,18 @@ export function formatMass(kg: number, system: UnitSystem, digits = 1): string {
   return system === 'us'
     ? `${kgToLb(kg).toFixed(digits)} lb`
     : `${kg.toFixed(digits)} kg`;
+}
+
+/** Formats a speed stored in m/s for display in the active unit system. */
+export function formatSpeed(mps: number, system: UnitSystem, digits = 1): string {
+  return system === 'us'
+    ? `${mpsToMph(mps).toFixed(digits)} mph`
+    : `${mps.toFixed(digits)} m/s`;
+}
+
+/** Formats an energy stored in joules for display in the active unit system. */
+export function formatEnergy(j: number, system: UnitSystem, digits = 0): string {
+  return system === 'us'
+    ? `${jToFtLbf(j).toFixed(digits)} ft·lbf`
+    : `${(j / 1000).toFixed(Math.max(digits, 1))} kJ`;
 }

@@ -3,6 +3,9 @@ import { InputPanel } from './components/InputPanel';
 import { SideView } from './components/SideView';
 import { ResultsPanel } from './components/ResultsPanel';
 import { WarningsPanel } from './components/WarningsPanel';
+import { DynamicsPanel } from './components/DynamicsPanel';
+import { SimControls } from './components/SimControls';
+import { TimeHistoryCharts } from './components/TimeHistoryCharts';
 import { DISCLAIMER } from './models/scenario';
 
 export default function App() {
@@ -39,8 +42,11 @@ export default function App() {
         <InputPanel />
         <main className="viz-area">
           <SideView />
+          <SimControls />
+          <TimeHistoryCharts />
         </main>
         <div className="right-col">
+          <DynamicsPanel />
           <ResultsPanel />
           <WarningsPanel />
         </div>

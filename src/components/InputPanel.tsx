@@ -11,8 +11,10 @@ import {
   mpsToMph,
   inToM,
   mToIn,
+  ft2ToM2,
+  m2ToFt2,
 } from '../units/units';
-import type { Scenario } from '../models/scenario';
+import type { BrakeLaw, Scenario } from '../models/scenario';
 
 type Conv = { toSi: (v: number) => number; fromSi: (v: number) => number; us: string; si: string };
 const LEN: Conv = { toSi: ftToM, fromSi: mToFt, us: 'ft', si: 'm' };
@@ -20,6 +22,7 @@ const LEN_IN: Conv = { toSi: inToM, fromSi: mToIn, us: 'in', si: 'm' };
 const MASS: Conv = { toSi: lbToKg, fromSi: kgToLb, us: 'lb', si: 'kg' };
 const FORCE: Conv = { toSi: lbfToN, fromSi: nToLbf, us: 'lbf', si: 'N' };
 const SPEED: Conv = { toSi: mphToMps, fromSi: mpsToMph, us: 'mph', si: 'm/s' };
+const AREA: Conv = { toSi: ft2ToM2, fromSi: m2ToFt2, us: 'ft²', si: 'm²' };
 const NONE: Conv = { toSi: (v) => v, fromSi: (v) => v, us: '—', si: '—' };
 
 export function InputPanel() {
@@ -105,6 +108,15 @@ export function InputPanel() {
         {field('Max allowable speed', 'Speed limit for the test article.', SPEED,
           (s) => s.trolley.maxAllowableSpeedMps,
           (s, v) => ({ ...s, trolley: { ...s.trolley, maxAllowableSpeedMps: v } }))}
+        {field('Rolling resistance coeff.', 'PROVISIONAL — dimensionless C_rr for cable wheels; verify by test.', NONE,
+          (s) => s.trolley.rollingResistanceCoeff,
+          (s, v) => ({ ...s, trolley: { ...s.trolley, rollingResistanceCoeff: v } }))}
+        {field('Drag area (Cd·A)', 'PROVISIONAL — drag coefficient × frontal area of trolley + payload.', AREA,
+          (s) => s.trolley.dragAreaM2,
+          (s, v) => ({ ...s, trolley: { ...s.trolley, dragAreaM2: v } }))}
+        {field('Structural rating', 'Max force the trolley may carry. 0 = not entered (check skipped).', FORCE,
+          (s) => s.trolley.trolleyStructuralRatingN,
+          (s, v) => ({ ...s, trolley: { ...s.trolley, trolleyStructuralRatingN: v } }))}
       </details>
 
       <details>
@@ -143,6 +155,49 @@ export function InputPanel() {
       </details>
 
       <details>
+        <summary>Brake &amp; dynamics</summary>
+        <label className="field">
+          <span className="field-label" title="Idealized preliminary brake law used by the simulation.">
+            Brake law
+          </span>
+          <select
+            value={scenario.brake.brakeLaw}
+            onChange={(e) =>
+              update((s) => ({ ...s, brake: { ...s.brake, brakeLaw: e.target.value as BrakeLaw } }))
+            }
+          >
+            <option value="constant-force">Constant force</option>
+            <option value="linear-ramp">Linear ramp</option>
+            <option value="velocity-proportional">Velocity proportional</option>
+          </select>
+        </label>
+        {field('Brake force', 'Constant force, or peak force at full ramp stroke.', FORCE,
+          (s) => s.brake.brakeForceN,
+          (s, v) => ({ ...s, brake: { ...s.brake, brakeForceN: v } }))}
+        {field('Velocity coeff. (N·s/m)', 'c in F = c·v for the velocity-proportional law. SI value.', NONE,
+          (s) => s.brake.velocityCoeffNsPerM,
+          (s, v) => ({ ...s, brake: { ...s.brake, velocityCoeffNsPerM: v } }))}
+        {field('Brake capacity', 'Hardware max allowable force. 0 = not entered (check skipped).', FORCE,
+          (s) => s.brake.brakeCapacityN,
+          (s, v) => ({ ...s, brake: { ...s.brake, brakeCapacityN: v } }))}
+        {field('Max deceleration (m/s²)', 'Allowable deceleration for the test article. SI value.', NONE,
+          (s) => s.brake.maxDecelerationMps2,
+          (s, v) => ({ ...s, brake: { ...s.brake, maxDecelerationMps2: v } }))}
+        {field('Available stroke', 'Stopping distance available in the brake zone.', LEN,
+          (s) => s.brake.availableStrokeM,
+          (s, v) => ({ ...s, brake: { ...s.brake, availableStrokeM: v } }))}
+        {field('Release position (0–1)', 'Release point as a fraction of the main span from the master node.', NONE,
+          (s) => s.dynamics.releasePositionFrac,
+          (s, v) => ({ ...s, dynamics: { ...s.dynamics, releasePositionFrac: v } }))}
+        {field('Release speed', 'Initial speed at release (0 = from rest).', SPEED,
+          (s) => s.dynamics.releaseSpeedMps,
+          (s, v) => ({ ...s, dynamics: { ...s.dynamics, releaseSpeedMps: v } }))}
+        {field('Time step (s)', 'RK4 integration step. Smaller = more accurate, slower.', NONE,
+          (s) => s.dynamics.timeStepS,
+          (s, v) => ({ ...s, dynamics: { ...s.dynamics, timeStepS: v } }))}
+      </details>
+
+      <details>
         <summary>Environment</summary>
         {field('Steady crosswind', 'Steady crosswind at test elevation.', SPEED,
           (s) => s.environment.steadyCrosswindMps,
@@ -150,6 +205,12 @@ export function InputPanel() {
         {field('Gust', 'Gust speed.', SPEED,
           (s) => s.environment.gustMps,
           (s, v) => ({ ...s, environment: { ...s.environment, gustMps: v } }))}
+        {field('Along-track wind', 'Wind along the main span; positive = tailwind pushing the trolley downhill.', SPEED,
+          (s) => s.environment.alongTrackWindMps,
+          (s, v) => ({ ...s, environment: { ...s.environment, alongTrackWindMps: v } }))}
+        {field('Air density (kg/m³)', 'Default 1.225 (standard sea level). SI value.', NONE,
+          (s) => s.environment.airDensityKgPerM3,
+          (s, v) => ({ ...s, environment: { ...s.environment, airDensityKgPerM3: v } }))}
       </details>
     </aside>
   );

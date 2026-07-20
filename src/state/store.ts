@@ -8,8 +8,11 @@ interface AppState {
   unitSystem: UnitSystem;
   /** Trolley position as fraction of main-leg span (0 = at node, 1 = at brake anchor) */
   trolleyPositionFrac: number;
+  /** Simulation playback time, s (drives the animated trolley) */
+  simTimeS: number;
   setUnitSystem: (u: UnitSystem) => void;
   setTrolleyPosition: (frac: number) => void;
+  setSimTime: (t: number) => void;
   /** Immutable partial update helper for nested scenario sections. */
   updateScenario: (updater: (s: Scenario) => Scenario) => void;
   resetToExample: () => void;
@@ -19,8 +22,11 @@ export const useAppStore = create<AppState>((set) => ({
   scenario: exampleScenario,
   unitSystem: 'us',
   trolleyPositionFrac: 0.3,
+  simTimeS: 0,
   setUnitSystem: (u) => set({ unitSystem: u }),
   setTrolleyPosition: (frac) => set({ trolleyPositionFrac: Math.max(0, Math.min(1, frac)) }),
-  updateScenario: (updater) => set((state) => ({ scenario: updater(state.scenario) })),
-  resetToExample: () => set({ scenario: exampleScenario }),
+  setSimTime: (t) => set({ simTimeS: Math.max(0, t) }),
+  updateScenario: (updater) =>
+    set((state) => ({ scenario: updater(state.scenario), simTimeS: 0 })),
+  resetToExample: () => set({ scenario: exampleScenario, simTimeS: 0 }),
 }));

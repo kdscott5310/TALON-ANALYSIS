@@ -113,6 +113,16 @@ export function validateScenario(s: Scenario): ValidationResult {
     issues.push(err('trolley.maxAllowableSpeedMps', 'Maximum allowable speed must be a positive number.'));
   else if (trolley.maxAllowableSpeedMps > mphToMps(77))
     issues.push(warn('trolley.maxAllowableSpeedMps', 'Speeds above ~77 mph exceed the frictionless ceiling for a 200 ft apex.'));
+  if (!Number.isFinite(trolley.rollingResistanceCoeff) || trolley.rollingResistanceCoeff < 0)
+    issues.push(err('trolley.rollingResistanceCoeff', 'Rolling-resistance coefficient must be zero or positive.'));
+  else if (trolley.rollingResistanceCoeff > 0.05)
+    issues.push(warn('trolley.rollingResistanceCoeff', 'Rolling resistance above 0.05 is unusually high for cable wheels; verify.'));
+  if (!Number.isFinite(trolley.dragAreaM2) || trolley.dragAreaM2 < 0)
+    issues.push(err('trolley.dragAreaM2', 'Drag area (Cd·A) must be zero or positive.'));
+  if (!Number.isFinite(trolley.trolleyStructuralRatingN) || trolley.trolleyStructuralRatingN < 0)
+    issues.push(err('trolley.trolleyStructuralRatingN', 'Trolley structural rating must be zero (not entered) or positive.'));
+  else if (trolley.trolleyStructuralRatingN === 0)
+    issues.push(warn('trolley.trolleyStructuralRatingN', 'Trolley structural rating not entered; brake-force check on the trolley is not evaluated.'));
 
   // ---- crane ----
   if (!finitePositive(crane.ratedCapacityAtRadiusN))
@@ -152,6 +162,21 @@ export function validateScenario(s: Scenario): ValidationResult {
     issues.push(err('brake.maxDecelerationMps2', 'Maximum deceleration must be a positive number.'));
   if (!finitePositive(brake.availableStrokeM))
     issues.push(err('brake.availableStrokeM', 'Available brake stroke must be a positive number.'));
+  if (!Number.isFinite(brake.brakeForceN) || brake.brakeForceN < 0)
+    issues.push(err('brake.brakeForceN', 'Brake force must be zero or positive.'));
+  else if (
+    brake.brakeForceN === 0 &&
+    (brake.brakeLaw === 'constant-force' || brake.brakeLaw === 'linear-ramp')
+  )
+    issues.push(warn('brake.brakeForceN', 'Brake force is zero — the selected brake law produces no braking.'));
+  if (!Number.isFinite(brake.velocityCoeffNsPerM) || brake.velocityCoeffNsPerM < 0)
+    issues.push(err('brake.velocityCoeffNsPerM', 'Velocity-proportional coefficient must be zero or positive.'));
+  else if (brake.velocityCoeffNsPerM === 0 && brake.brakeLaw === 'velocity-proportional')
+    issues.push(warn('brake.velocityCoeffNsPerM', 'Velocity coefficient is zero — the selected brake law produces no braking.'));
+  if (!Number.isFinite(brake.brakeCapacityN) || brake.brakeCapacityN < 0)
+    issues.push(err('brake.brakeCapacityN', 'Brake capacity must be zero (not entered) or positive.'));
+  else if (brake.brakeCapacityN === 0)
+    issues.push(warn('brake.brakeCapacityN', 'Brake hardware capacity not entered; capacity check is not evaluated.'));
 
   // ---- environment ----
   if (!Number.isFinite(environment.steadyCrosswindMps) || environment.steadyCrosswindMps < 0)
@@ -165,6 +190,29 @@ export function validateScenario(s: Scenario): ValidationResult {
     issues.push(warn('environment.gustMps', 'Gust speed is below the steady crosswind; verify inputs.'));
   if (!Number.isFinite(environment.temperatureC))
     issues.push(err('environment.temperatureC', 'Temperature must be a number.'));
+  if (!Number.isFinite(environment.alongTrackWindMps))
+    issues.push(err('environment.alongTrackWindMps', 'Along-track wind must be a number (+ = tailwind).'));
+  if (!finitePositive(environment.airDensityKgPerM3))
+    issues.push(err('environment.airDensityKgPerM3', 'Air density must be a positive number.'));
+  else if (environment.airDensityKgPerM3 < 0.9 || environment.airDensityKgPerM3 > 1.4)
+    issues.push(warn('environment.airDensityKgPerM3', 'Air density outside 0.9–1.4 kg/m³ is unusual near sea level; verify.'));
+
+  // ---- dynamics settings ----
+  const dyn = s.dynamics;
+  if (!Number.isFinite(dyn.releasePositionFrac) || dyn.releasePositionFrac < 0 || dyn.releasePositionFrac >= 1)
+    issues.push(err('dynamics.releasePositionFrac', 'Release position must be in [0, 1) of the main span.'));
+  if (!Number.isFinite(dyn.releaseSpeedMps) || dyn.releaseSpeedMps < 0)
+    issues.push(err('dynamics.releaseSpeedMps', 'Release speed must be zero or positive.'));
+  if (!finitePositive(dyn.timeStepS))
+    issues.push(err('dynamics.timeStepS', 'Simulation time step must be a positive number.'));
+  else {
+    if (dyn.timeStepS > 0.1)
+      issues.push(warn('dynamics.timeStepS', 'Time step above 0.1 s reduces integration accuracy.'));
+    if (dyn.timeStepS < 1e-4)
+      issues.push(warn('dynamics.timeStepS', 'Time step below 0.0001 s is unnecessarily slow.'));
+  }
+  if (!finitePositive(dyn.maxSimTimeS))
+    issues.push(err('dynamics.maxSimTimeS', 'Simulation time limit must be a positive number.'));
 
   return {
     issues,

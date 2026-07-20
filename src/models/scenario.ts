@@ -44,6 +44,12 @@ export interface TrolleyPayload {
   /** Payload vertical drop below trolley, m */
   payloadDropM: number;
   maxAllowableSpeedMps: number;
+  /** Rolling-resistance coefficient (dimensionless) — PROVISIONAL */
+  rollingResistanceCoeff: number;
+  /** Aerodynamic drag area Cd*A, m^2 — PROVISIONAL */
+  dragAreaM2: number;
+  /** Trolley structural rating (max applied force), N — 0 = not entered */
+  trolleyStructuralRatingN: number;
 }
 
 export interface CraneInputs {
@@ -66,16 +72,42 @@ export interface AnchorInputs {
   slidingSafetyFactor: number;
 }
 
+/** Preliminary brake force-vs-stroke/velocity laws (Milestone 3). */
+export type BrakeLaw = 'constant-force' | 'linear-ramp' | 'velocity-proportional';
+
 export interface BrakeInputs {
   brakeType: 'hydraulic-sled' | 'shock-absorber-bank' | 'friction-rope' | 'eddy-current';
   maxDecelerationMps2: number;
   availableStrokeM: number;
+  /** Selected preliminary brake law for the dynamic simulation */
+  brakeLaw: BrakeLaw;
+  /** Brake force parameter, N: constant force, or peak force at full ramp stroke */
+  brakeForceN: number;
+  /** Velocity-proportional coefficient c in F = c*v, N·s/m */
+  velocityCoeffNsPerM: number;
+  /** User-entered brake hardware capacity (max allowable force), N — 0 = not entered */
+  brakeCapacityN: number;
 }
 
 export interface EnvironmentInputs {
   steadyCrosswindMps: number;
   gustMps: number;
   temperatureC: number;
+  /** Wind component along the main-span track, m/s (+ = tailwind pushing trolley downhill) */
+  alongTrackWindMps: number;
+  /** Air density, kg/m^3 — default 1.225 (standard sea level) */
+  airDensityKgPerM3: number;
+}
+
+export interface DynamicsSettings {
+  /** Release position as fraction of main-leg span (0 = at master node) */
+  releasePositionFrac: number;
+  /** Release speed along the cable, m/s (0 = released from rest) */
+  releaseSpeedMps: number;
+  /** Numerical integration time step, s */
+  timeStepS: number;
+  /** Simulation time limit, s (termination guard) */
+  maxSimTimeS: number;
 }
 
 export interface Scenario {
@@ -91,6 +123,7 @@ export interface Scenario {
   anchors: AnchorInputs;
   brake: BrakeInputs;
   environment: EnvironmentInputs;
+  dynamics: DynamicsSettings;
 }
 
 export const DISCLAIMER =
