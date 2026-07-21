@@ -13,8 +13,8 @@ criteria.
 | MS | Title | Status | Branch | Tests |
 |---|---|---|---|---|
 | M6 | Generalized platform model | ✅ **COMPLETE** | `milestone-6-generalized-platform` | 186 |
-| M7 | Data provenance & component library | 🔄 in progress | `milestone-7-component-library` | — |
-| M8 | Nonlinear elastic cable analysis | ⬜ not started | — | — |
+| M7 | Data provenance & component library | ✅ **COMPLETE** | `milestone-7-component-library` | 213 |
+| M8 | Nonlinear elastic cable analysis | 🔄 in progress | `milestone-8-nonlinear-cable` | — |
 | M9 | Wheel inertia, trolley dynamics, pendulum | ⬜ not started | — | — |
 | M10 | Brake curve modeling | ⬜ not started | — | — |
 | M11 | Lateral / out-of-plane cable dynamics | ⬜ not started | — | — |
@@ -49,6 +49,22 @@ Delivered:
 badges rendered in panels (M15).
 
 ---
+
+## M7 — Data provenance & component library ✅
+
+**Branch:** `milestone-7-component-library` · **Tests:** 213 · **Build:** clean
+
+- `core/library/componentLibrary.ts` — versioned library, record/property provenance, obsolescence, merge rules, audit warnings
+- `core/library/libraryIo.ts` — JSON round-trip + CSV import/export (CSV can never assert verification)
+- `core/library/sourceAdapters.ts` — online-retrieval adapter contract with compliance gating; search snippets refused as proof; no network adapter ships in this build
+- `core/library/seedLibrary.ts` — 6 example-only records carrying no manufacturer/model/part number
+
+**Key guarantees tested:** verified records are never overwritten by unverified
+data; seeds never claim verification; CSV imports enter as importedUnverified;
+empty CSV values become MISSING, not zero; adapters that bypass access controls
+are refused.
+
+**Not done:** UI for browsing/editing the library (deferred with other UI work).
 
 ## Known carry-forward items
 
