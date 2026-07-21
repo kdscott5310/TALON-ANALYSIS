@@ -1759,3 +1759,47 @@ At the end, provide:
 5. Unresolved engineering decisions
 6. Recommended next physical test
 7. Exact commands to run the application
+
+________________________________________
+# PLATFORM SCOPE EXTENSION (v2, Milestone 6 onward)
+
+The specification above defines the CUFTS application, which remains the
+authoritative requirement set for the CUFTS **template**.
+
+From Milestone 6, TALON is additionally a reusable engineering analysis
+platform for cable-supported test fixtures, moving trolley systems,
+crane-supported fixtures, portable test structures, and related mechanical
+systems. See [ROADMAP_V2.md](ROADMAP_V2.md) for Milestones 6–13.
+
+## Generalized model (implemented, M6)
+
+A `Project` describes a system independently of CUFTS: coordinate systems,
+nodes, materials, components, elements, supports, constraints, loads, load
+cases, moving bodies, analysis cases, solver results, and verification
+metadata. Element types are cable, truss, rigid link, linear spring, viscous
+damper, point mass, and brake/contact force.
+
+CUFTS is preserved as a built-in template. Its `Scenario` remains the
+authoritative input for the validated v1 solvers, which run unchanged behind an
+adapter; the generalized topology is projected from it. Scenario files of
+schema v1/v2/v3 migrate into projects with every filled field disclosed.
+
+## Data verification requirement (all milestones)
+
+Every engineering property carries a verification state — verified,
+provisional, estimated, example, or missing — plus source, reference, date,
+confidence, and derating. A missing rating is stored as null and is never
+substituted with zero or an assumed safe value. Dependent checks report
+insufficient information rather than passing or failing.
+
+## Future FEA path
+
+The generalized model is designed to later support 2D truss, 2D frame, 3D
+truss, nonlinear cable/truss, modal, and transient structural analysis, and
+export to an external validated FEA solver.
+
+Explicitly **out of scope** and documented as future external-solver
+integrations: shell elements, solid elements, automatic meshing, nonlinear
+contact, and plasticity. TALON does not claim FEA capabilities it does not
+implement; reduced-order and lumped-parameter models are labeled as such
+wherever they appear.

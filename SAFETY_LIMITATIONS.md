@@ -86,6 +86,33 @@ independently verified by qualified professionals before use:
 - Wind, gust, and out-of-plane loading limits.
 - All operating procedures, interlocks, and abort criteria.
 
+## Data verification states (generalized model, M6)
+
+Every engineering property in the generalized project model carries an explicit
+verification state. Only **verified** data — confirmed against a manufacturer
+certificate, test report, standard, or field measurement with a cited source —
+may support a decision about a physical test.
+
+| State | Meaning | Fit to authorize a test? |
+|---|---|---|
+| `verified` | Confirmed against a cited source | Only after engineer review |
+| `provisional` | Entered by the engineer, pending verification | **No** |
+| `estimated` | Derived or inferred (geometry, correlation) | **No** |
+| `example` | Illustrative placeholder shipped with a template | **No — never** |
+| `missing` | Not supplied | **No** — dependent checks report insufficient information |
+
+A `missing` value is stored as `null`, not zero. Calculations must branch on it
+and report *insufficient information*; they must not pass, fail, or assume a
+value. No project is marked engineer-reviewed by the software — that flag is
+set only by a qualified person.
+
+Values the v1 CUFTS scenario does not supply are recorded as **missing** in the
+generalized model, not defaulted: cable axial stiffness EA, unstretched length,
+creep allowance, cable damping, wheel rotary inertia, wheel radius, payload
+pendulum damping, and cable material modulus/density/thermal expansion. These
+must be supplied before the Milestone 7/8 solvers that need them can produce
+results.
+
 ## Software limitations
 
 - Passing benchmarks verify the math against closed-form references; they

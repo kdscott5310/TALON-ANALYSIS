@@ -79,8 +79,39 @@ Near-level cable, steep geometry (parabolic-warning path), very small sag
 (high pretension), large moving load, zero / opposing / tailwind, short
 brake zone (stopping-failure warning), and invalid/low ratings.
 
+## Milestone 6 — migration equivalence
+
+The generalized project model is validated by **equivalence**, not tolerance:
+migrating a CUFTS scenario into a `Project` and analyzing it through the
+adapter must reproduce the v1 results **exactly**.
+
+`src/tests/generalizedModel.test.ts` asserts strict equality (`toBe` /
+`toEqual`, no epsilon) on:
+
+| Output | Scope |
+|---|---|
+| `mainLegLoaded.maxTensionN` | 5 trolley positions × 2 scenarios |
+| `masterNode.hookResultantN`, `craneUtilization` | 5 positions × 2 scenarios |
+| `launchAnchor.slidingSF`, `brakeAnchor.slidingSF` | 5 positions × 2 scenarios |
+| `groundClearanceMarginM`, `allWarnings` | 5 positions × 2 scenarios |
+| Dynamics: final position/time, peak speed/decel/brake force, termination, full energy audit, complete velocity history | 2 scenarios |
+| Full status summary object | 2 scenarios + export/import round trip |
+
+Rationale: the v1 solvers are covered by 16 analytical benchmarks and 115
+tests. Re-deriving their inputs from generalized entities could introduce
+silent numerical drift, so the CUFTS template keeps the `Scenario` as the
+authoritative input and the adapter passes it through untouched. Any future
+change that perturbs v1 numerics fails these equality tests immediately.
+
+Provenance rules are also tested: un-entered ratings remain `missing`
+(`value === null`), example data never claims `verified`, `requireValue`
+throws instead of defaulting, and quantities absent from the v1 schema (EA,
+unstretched length, wheel inertia) are recorded as missing with a note naming
+the milestone that will need them.
+
 ## Test summary
 
-`npm test` runs **108 tests** across 7 suites: units, static solvers,
-dynamics, scenario workflow/serialization, benchmarks, invariants, and
-input validation. All pass from a clean checkout.
+`npm test` runs **142 tests** across 9 suites: units, static solvers,
+dynamics, scenario workflow/serialization, benchmarks, invariants, input
+validation, ground clearance, and the generalized model. All pass from a
+clean checkout.

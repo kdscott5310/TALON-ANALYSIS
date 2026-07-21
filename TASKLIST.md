@@ -1,5 +1,25 @@
 # TASKLIST
 
+## v2 platform evolution — see [ROADMAP_V2.md](ROADMAP_V2.md) for M6–M13
+
+## Milestone 6 — Generalized model architecture (COMPLETE, branch `milestone-6-generalized-model`)
+- [x] `src/core/provenance.ts` — Quantity + Provenance with 5 verification states (verified / provisional / estimated / example / missing); missing is `value: null` and is never coerced to 0 (Rule 2)
+- [x] `src/core/geometry.ts` — Vec3, coordinate systems, nodes (3D from the start so M8 lateral + M11 3D need no schema break)
+- [x] `src/core/elements.ts` — materials + 7 element types: cable, truss, rigid link, linear spring, viscous damper, point mass, brake/contact
+- [x] `src/core/model.ts` — Project aggregate: components, supports, constraints, loads, load cases, moving bodies, analysis cases, solver results, verification metadata + referential-integrity checker
+- [x] `src/core/templates/cufts.ts` — CUFTS preserved as a built-in template; projects generalized topology from the v1 Scenario while keeping that Scenario authoritative
+- [x] `src/core/projectAnalysis.ts` — adapter running the unchanged v1 solvers from a Project
+- [x] `src/core/projectSerialization.ts` — versioned project envelope, import validation, migration from Scenario v1/v2/v3 files
+- [x] 27 tests: exact-equality of static/dynamic/summary results before vs after migration, template topology, provenance rules, serialization round-trip, rejection paths, integrity checking
+- [x] 142 tests pass (115 pre-existing unchanged); `npm run build` clean
+- [ ] UI adoption of the project model — deferred to a later milestone (M6 is a model-layer change; no UI regression risk)
+
+## Milestone 7 — Nonlinear elastic cable analysis (NEXT)
+- [ ] Parabolic / elastic catenary / segmented nonlinear selectable models
+- [ ] Iterative equilibrium + compatibility with convergence, iterations, residuals
+- [ ] EA, unstretched length, temperature strain, creep, support movement
+- [ ] Hand-calculable and literature benchmarks; failure tests (slack, infeasible, non-convergent)
+
 ## Post-release — Ground-clearance model fix (v1.1.0, COMPLETE)
 - [x] Decoupled capture-point elevation from terrain; added `captureHeightAboveGroundM` site input (schema v3 + v2→v3 migration)
 - [x] Scoped the min-ground-clearance requirement to the flight span (up to brake entry); excluded brake/capture zones

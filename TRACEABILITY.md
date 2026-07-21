@@ -48,6 +48,11 @@ validation; see [SAFETY_LIMITATIONS.md](SAFETY_LIMITATIONS.md).
 | §16 | Unit switching (US ↔ SI) | `units/units.ts`, header selector | `units.test.ts` | Header | Implemented |
 | §17 | Baseline example configuration loaded on startup | `models/exampleScenario.ts` | `scenarioWorkflow.test.ts` | Default scenario | Implemented |
 | §M5 | Requirements traceability, benchmarks, error boundary, release docs | this file, `benchmarks.ts`, `ErrorBoundary.tsx`, README | `benchmarks.test.ts`, `invariants.test.ts` | Validation tab | Implemented |
+| §M6 | Generalized project model (projects, templates, nodes, coordinate systems, elements, materials, components, supports, constraints, loads, load cases, moving bodies, analysis cases, solver results, verification metadata) | `core/model.ts`, `core/geometry.ts`, `core/elements.ts` | `generalizedModel.test.ts` | — (model layer; UI adoption later) | Implemented |
+| §M6 | Element types: cable, truss, rigid link, linear spring, viscous damper, point mass, brake/contact | `core/elements.ts` | `generalizedModel.test.ts` | — | Implemented |
+| §M6 | Verified / provisional / estimated / example / missing data states; missing never defaulted | `core/provenance.ts` | `generalizedModel.test.ts` (provenance rules) | PROVISIONAL / NOT ENTERED flags | Implemented |
+| §M6 | CUFTS preserved as a built-in project template | `core/templates/cufts.ts` | `generalizedModel.test.ts` (topology, round-trip) | Existing CUFTS UI unchanged | Implemented |
+| §M6 | Schema migration from the current format; unchanged results after migration | `core/projectSerialization.ts`, `core/projectAnalysis.ts` | `generalizedModel.test.ts` (exact-equality suite) | — | Implemented |
 
 ## Deferred items (rationale)
 
