@@ -10,6 +10,7 @@ import { ScenarioBar } from './components/ScenarioBar';
 import { RegistersPanel } from './components/RegistersPanel';
 import { CompareView } from './components/CompareView';
 import { ReportView } from './components/ReportView';
+import { ValidationView } from './components/ValidationView';
 import { DISCLAIMER } from './models/scenario';
 
 const TABS: { id: WorkflowTab; label: string }[] = [
@@ -18,6 +19,7 @@ const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'dynamic', label: 'Dynamic Analysis' },
   { id: 'compare', label: 'Compare' },
   { id: 'report', label: 'Report' },
+  { id: 'validation', label: 'Validation' },
 ];
 
 export default function App() {
@@ -138,6 +140,8 @@ export default function App() {
           <ReportView />
         </div>
       )}
+
+      {activeTab === 'validation' && <ValidationView />}
 
       <footer className="disclaimer no-print">{DISCLAIMER}</footer>
     </div>

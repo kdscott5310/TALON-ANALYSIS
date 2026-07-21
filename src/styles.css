@@ -162,3 +162,17 @@ body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: va
 
 /* ── M4: accessibility ── */
 button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── M5: benchmark validation ── */
+.benchmark-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
+.benchmark-table th, .benchmark-table td { padding: 5px 8px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.benchmark-table th { background: #eef2f6; position: sticky; top: 0; }
+.benchmark-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.benchmark-cat td { background: #dbe6f0; font-weight: 700; color: var(--accent); }
+.benchmark-note { font-size: 0.72rem; color: #55606b; margin-top: 2px; }
+
+/* ── M5: error boundary ── */
+.error-boundary { max-width: 720px; margin: 60px auto; padding: 28px 32px; background: #fff; border: 2px solid var(--error); border-radius: 8px; }
+.error-boundary h1 { color: var(--error); font-size: 1.2rem; margin-top: 0; }
+.error-boundary pre { background: #f4f6f8; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 0.78rem; }
+.error-boundary button { padding: 8px 18px; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; }

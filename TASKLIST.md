@@ -70,11 +70,25 @@
 - [x] 16 new Vitest tests: round-trip serialization, bare-object import, unknown-field dropping, invalid JSON/fileType/schema/enum rejection, v1→v2 migration + solver usability of migrated data, status categories (insufficient never zero/acceptable), overall-status propagation, report data assembly, CSV content and escaping
 - [x] npm test (91 tests) and npm run build pass
 
-## Milestone 5 — Validation and Release (NEXT)
-- [ ] Benchmark validation panel (expected vs calculated, tolerance, pass/fail)
-- [ ] Cross-check against hand-calculation documentation
-- [ ] Known-limitations documentation
-- [ ] Release packaging
+## Milestone 5 — Validation, Hardening, and Release (COMPLETE)
+- [x] Requirements traceability matrix (TRACEABILITY.md) linking spec → code/tests/UI with status
+- [x] Benchmark validation suite: 16 hand-calculable cases across units, geometry, static cable, equilibrium, anchors, dynamics, braking (calculations/benchmarks.ts)
+- [x] In-app Validation tab showing expected vs calculated, rel. error, tolerance, pass/fail (components/ValidationView.tsx)
+- [x] Benchmarks run identically in CI (tests/benchmarks.test.ts) — in-app status matches tests
+- [x] Invariant/property tests: node equilibrium closure, nonnegative energy, monotonic brake behavior, finite outputs (tests/invariants.test.ts)
+- [x] Edge cases: near-level cable, steep geometry, small sag, large load, zero/opposing/tailwind, short brake zone, invalid ratings
+- [x] Numerical tolerance & time-step sensitivity documentation (VALIDATION.md)
+- [x] Application-wide error boundary with diagnostics (components/ErrorBoundary.tsx)
+- [x] Dependency audit (0 vulnerabilities); removed junk (files.zip, bundles, patch, test txt); .gitignore hardened
+- [x] Static-host deployment instructions and final README (setup/use/models/limitations/verification status)
+- [x] Release notes + explicit list of inputs requiring professional/manufacturer validation (RELEASE_NOTES.md, SAFETY_LIMITATIONS.md)
+- [x] npm test (108 tests) and npm run build pass from clean checkout
+
+## Release gates (Milestone 5)
+- Every requirement marked implemented / partial / deferred / N-A in TRACEABILITY.md.
+- No known critical calculation defect: all benchmarks pass their documented tolerances.
+- All assumptions, limitations, and solver failures visible in-app (registers, warnings, status, Validation tab).
+- No manufacturer/crane data represented as certified; un-entered ratings report "insufficient", never zero/acceptable.
 
 ## Assumptions register
 - Master node horizontal station equals launch-anchor offset from launch station.

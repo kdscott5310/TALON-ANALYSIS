@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v1.0.0 — Milestone 5: Validation, Hardening, and Release
+- Added an independent benchmark validation suite: 16 hand-calculable cases across units, geometry, static cable, master-node equilibrium, anchors, dynamics, and braking, each comparing a solver output against a closed-form expected value derived independently of the solver (`src/calculations/benchmarks.ts`).
+- Added the in-app Validation tab showing expected vs calculated, relative error, tolerance, and pass/fail per case, grouped by category; the same cases run in CI so the displayed status matches the test suite (`src/components/ValidationView.tsx`).
+- Added `benchmarks.test.ts` (4 tests) and `invariants.test.ts` (13 tests): property/invariant checks (master-node force-balance closure < 1e-6 N over swept positions, nonnegative energy dissipation, monotonic brake behavior, finite outputs) and edge cases (near-level cable, steep geometry, small sag, large moving load, zero/opposing/tailwind, short brake zone, invalid/low ratings).
+- Added an application-wide React error boundary with a diagnostic message and recovery actions; a failing panel can no longer blank the whole app (`src/components/ErrorBoundary.tsx`, wired in `src/main.tsx`).
+- Added requirements traceability matrix (`TRACEABILITY.md`), numerical-tolerance and time-step-sensitivity documentation (`VALIDATION.md`), model/safety limitations (`SAFETY_LIMITATIONS.md`), release notes (`RELEASE_NOTES.md`), and a full rewrite of `README.md` (setup, use, models, verification status, static-host deployment).
+- Repository hygiene: removed tracked artifacts (`files.zip`, `talon-*.bundle`, `talon-milestone1.patch`, `CHATGPT_WRITE_TEST.txt`) and hardened `.gitignore`; `npm audit` reports 0 vulnerabilities; runtime dependencies (react, react-dom, zustand) confirmed in use.
+- Total test count: 108 (15 units + 27 static + 20 dynamics + 16 workflow + 13 invariants + 4 benchmarks + 13 validation).
+
 ## v0.5.0 — Milestone 4: Engineering Workflow, Scenarios, and Reports
 - Added versioned scenario serialization (schema v2) with export envelope, strict structural import validation (typed fields, whitelisted enums, unknown fields dropped), and v1→v2 migration that fills missing Milestone-3 fields with labeled PROVISIONAL defaults and discloses every fill as a migration note (`src/models/scenarioSerialization.ts`).
 - Rebuilt the store as a multi-scenario library: create, duplicate, rename, delete, import, export, active selection, and compare selection, persisted to localStorage with corrupt-data recovery (discard + visible notice + built-in example fallback) (`src/state/store.ts`).
