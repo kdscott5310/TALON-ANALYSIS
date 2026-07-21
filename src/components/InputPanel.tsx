@@ -61,9 +61,12 @@ export function InputPanel() {
         {field('High-point elevation', 'Master-node height above launch-station ground (25–250 ft typical).', LEN,
           (s) => s.site.highPointElevationM,
           (s, v) => ({ ...s, site: { ...s.site, highPointElevationM: v } }))}
-        {field('Brake-anchor elevation', 'Brake-anchor ground elevation relative to launch station (+ up).', LEN,
+        {field('Capture-point elevation', 'Elevation of the capture point / downhill cable terminus relative to launch station (+ up). This is where the trolley is caught, not necessarily the ground.', LEN,
           (s) => s.site.brakeAnchorElevationM,
           (s, v) => ({ ...s, site: { ...s.site, brakeAnchorElevationM: v } }))}
+        {field('Capture height above ground', 'How high the capture point sits above local grade (0 = on the ground). Raise it for elevated capture per site terrain.', LEN,
+          (s) => s.site.captureHeightAboveGroundM,
+          (s, v) => ({ ...s, site: { ...s.site, captureHeightAboveGroundM: v } }))}
         {field('Launch-anchor offset', 'Horizontal offset of launch-side backstay anchor from the high point.', LEN,
           (s) => s.site.launchAnchorOffsetM,
           (s, v) => ({ ...s, site: { ...s.site, launchAnchorOffsetM: v } }))}

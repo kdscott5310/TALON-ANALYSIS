@@ -1,5 +1,12 @@
 # TASKLIST
 
+## Post-release — Ground-clearance model fix (v1.1.0, COMPLETE)
+- [x] Decoupled capture-point elevation from terrain; added `captureHeightAboveGroundM` site input (schema v3 + v2→v3 migration)
+- [x] Scoped the min-ground-clearance requirement to the flight span (up to brake entry); excluded brake/capture zones
+- [x] Validation, input field, report row, status traceability, and 7 tests; fixes the reported "−4.0 ft FAILED" false failure
+- [x] Reverted an unrelated Vite 5→8 / Vitest 2→4 major bump that appeared outside this task; release stays on the pinned/validated toolchain
+- [x] 115 tests pass; build clean
+
 ## Milestone 1 — Working Foundation (COMPLETE)
 - [x] Vite + React + TypeScript project scaffold
 - [x] Clean src/ structure (components, models, units, validation, calculations, state, tests)

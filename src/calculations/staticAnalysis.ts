@@ -181,15 +181,27 @@ export function runStaticAnalysis(input: StaticAnalysisInput): StaticAnalysisRes
   // elevation = highPointElev + profile.y
   // Ground under the main leg goes from 0 at x=node station to
   // brakeAnchorElev at x=brake station. Simplified as linear.
+  // The capture terminus (brakeAnchorElevationM) may sit above local
+  // grade; terrain under the brake end = terminus − captureHeightAboveGround.
+  // The minimum-clearance requirement applies to the FLIGHT span only,
+  // up to brake-zone entry: the brake and capture zones are where the
+  // trolley deliberately descends to the capture and are excluded.
+  const brakeEndGroundM = site.brakeAnchorElevationM - site.captureHeightAboveGroundM;
+  const flightEndX = Math.max(
+    0,
+    site.horizontalSpanM - site.brakeZoneLengthM - site.captureZoneLengthM,
+  );
   let minClearance = Infinity;
   for (const pt of mainLegLoaded.profile) {
+    if (pt.x > flightEndX) continue; // exclude brake + capture zones
     const absCableY = site.highPointElevationM + pt.y; // pt.y is negative for sag
     const frac = pt.x / site.horizontalSpanM;
-    const groundY = frac * site.brakeAnchorElevationM; // linear interp
+    const groundY = frac * brakeEndGroundM; // linear terrain interpolation
     const payloadBottom = absCableY - trolley.payloadDropM;
     const clearance = payloadBottom - groundY;
     if (clearance < minClearance) minClearance = clearance;
   }
+  if (!Number.isFinite(minClearance)) minClearance = 0; // degenerate-geometry guard
   const groundClearanceMarginM = minClearance - site.minGroundClearanceM;
 
   // ── Collect warnings ──────────────────────────────────────────────
@@ -205,9 +217,11 @@ export function runStaticAnalysis(input: StaticAnalysisInput): StaticAnalysisRes
 
   if (groundClearanceMarginM < 0) {
     allWarnings.push(
-      `Ground clearance violated: payload clears ground by only ` +
-        `${minClearance.toFixed(1)} m, which is ${Math.abs(groundClearanceMarginM).toFixed(1)} m ` +
-        `below the required ${site.minGroundClearanceM.toFixed(1)} m minimum.`,
+      `Ground clearance violated in the flight zone (up to brake entry): payload clears ` +
+        `ground by only ${minClearance.toFixed(1)} m, which is ` +
+        `${Math.abs(groundClearanceMarginM).toFixed(1)} m below the required ` +
+        `${site.minGroundClearanceM.toFixed(1)} m minimum. Increase pretension, raise the ` +
+        `high point, or raise the capture height above grade.`,
     );
   }
 

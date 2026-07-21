@@ -59,7 +59,15 @@ export function validateScenario(s: Scenario): ValidationResult {
   }
 
   if (!Number.isFinite(site.brakeAnchorElevationM))
-    issues.push(err('site.brakeAnchorElevationM', 'Brake-anchor elevation must be a number.'));
+    issues.push(err('site.brakeAnchorElevationM', 'Capture-point (brake-anchor) elevation must be a number.'));
+
+  if (!Number.isFinite(site.captureHeightAboveGroundM) || site.captureHeightAboveGroundM < 0)
+    issues.push(err('site.captureHeightAboveGroundM', 'Capture height above ground must be zero or positive.'));
+  else if (
+    Number.isFinite(site.brakeAnchorElevationM) &&
+    site.captureHeightAboveGroundM > site.brakeAnchorElevationM
+  )
+    issues.push(warn('site.captureHeightAboveGroundM', 'Capture height exceeds the capture-point elevation; the brake-end terrain is below the launch-station datum. Verify the site profile.'));
 
   if (!finitePositive(site.launchAnchorOffsetM))
     issues.push(err('site.launchAnchorOffsetM', 'Launch-anchor offset must be a positive number.'));

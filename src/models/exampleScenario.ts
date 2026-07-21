@@ -8,13 +8,14 @@ import { ftToM, inToM, lbToKg, lbfToN, mphToMps } from '../units/units';
  * manufacturer data, or professional approval before use.
  */
 export const exampleScenario: Scenario = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   name: 'Baseline 200 ft x 1,000 ft (UNVERIFIED EXAMPLE)',
   isUnverifiedExample: true,
   site: {
     horizontalSpanM: ftToM(1000),
     highPointElevationM: ftToM(200),
     brakeAnchorElevationM: 0,
+    captureHeightAboveGroundM: 0, // capture at grade in the baseline; raise per site terrain
     launchAnchorOffsetM: ftToM(300),
     brakeZoneLengthM: ftToM(50),
     captureZoneLengthM: ftToM(20),

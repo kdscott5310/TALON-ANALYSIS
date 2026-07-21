@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v1.1.0 — Ground-clearance model fix (capture height + flight-zone scope)
+- Decoupled the downhill capture terminus from the terrain: `brakeAnchorElevationM` is now the capture-point / cable-terminus elevation, and a new `captureHeightAboveGroundM` site input (≥ 0, default 0) sets how far the capture sits above local grade. The clearance check measures against `brakeAnchorElevationM − captureHeightAboveGroundM` instead of pinning the capture to the ground (`src/models/scenario.ts`, `src/calculations/staticAnalysis.ts`).
+- Scoped the minimum-ground-clearance requirement to the flight span only — up to brake-zone entry — excluding the brake and capture zones where the trolley deliberately descends to the capture. This removes the false failure caused by the terminus necessarily reaching capture elevation (`src/calculations/staticAnalysis.ts`). Fixes the reported "Ground clearance margin −4.0 ft FAILED" case, which was the capture terminus at grade rather than a real flight-path clearance problem.
+- Bumped the scenario schema to v3 with v2→v3 migration filling `captureHeightAboveGroundM = 0` and disclosing the fill; generalized the migration note for any older version; import validation now accepts schema versions 1–3 (`src/models/scenarioSerialization.ts`).
+- Added input validation (capture height ≥ 0, advisory when it exceeds the capture-point elevation), the two site inputs in the panel, a report row, and updated the status-summary traceability text (`src/validation/validate.ts`, `src/components/InputPanel.tsx`, `src/reports/reportData.ts`, `src/calculations/statusSummary.ts`).
+- Added 7 tests (`src/tests/groundClearance.test.ts`): reproduces the reported scenario and confirms it is no longer failed by the terminus, verifies flight-zone exclusion, capture-height monotonicity, v2→v3 migration, and validation of a negative capture height.
+- Total test count: 115 (108 + 7 ground-clearance).
+
 ## v1.0.0 — Milestone 5: Validation, Hardening, and Release
 - Added an independent benchmark validation suite: 16 hand-calculable cases across units, geometry, static cable, master-node equilibrium, anchors, dynamics, and braking, each comparing a solver output against a closed-form expected value derived independently of the solver (`src/calculations/benchmarks.ts`).
 - Added the in-app Validation tab showing expected vs calculated, relative error, tolerance, and pass/fail per case, grouped by category; the same cases run in CI so the displayed status matches the test suite (`src/components/ValidationView.tsx`).

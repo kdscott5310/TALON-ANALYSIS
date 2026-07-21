@@ -12,15 +12,28 @@ export interface SiteGeometry {
   horizontalSpanM: number;
   /** High point (master node) elevation above launch-station ground, m */
   highPointElevationM: number;
-  /** Ground elevation of brake anchor relative to launch station ground, m (+up) */
+  /**
+   * Capture-point / downhill cable-terminus elevation, relative to
+   * launch-station ground, m (+up). This is where the main test line
+   * terminates and the trolley is captured — NOT necessarily the local
+   * ground. The terrain under it is `brakeAnchorElevationM −
+   * captureHeightAboveGroundM`.
+   */
   brakeAnchorElevationM: number;
+  /**
+   * Height of the capture point above local grade at the brake end, m
+   * (≥ 0). 0 = capture sits on the ground; positive = capture is held
+   * above the terrain (e.g. on a stand/structure). Decouples the
+   * capture terminus from the ground for the clearance check.
+   */
+  captureHeightAboveGroundM: number;
   /** Horizontal offset of launch-side (backstay) anchor from high point, m */
   launchAnchorOffsetM: number;
   /** Brake zone length, m */
   brakeZoneLengthM: number;
   /** Capture zone length, m */
   captureZoneLengthM: number;
-  /** Required minimum payload ground clearance, m */
+  /** Required minimum payload ground clearance over the flight span, m */
   minGroundClearanceM: number;
 }
 
@@ -111,8 +124,11 @@ export interface DynamicsSettings {
 }
 
 export interface Scenario {
-  /** Schema version for migration (v1 = M2 era, v2 adds M3 dynamics fields) */
-  schemaVersion: 2;
+  /**
+   * Schema version for migration (v1 = M2 era, v2 adds M3 dynamics
+   * fields, v3 adds decoupled capture-height-above-ground).
+   */
+  schemaVersion: 3;
   name: string;
   /** True when the scenario is an unverified example, not validated data */
   isUnverifiedExample: boolean;

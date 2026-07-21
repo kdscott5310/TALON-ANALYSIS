@@ -204,9 +204,9 @@ export function summarizeScenario(scenario: Scenario): ScenarioSummary {
           : minClearanceMargin < 0.2 * Math.max(scenario.site.minGroundClearanceM, 0.1)
             ? 'caution'
             : 'ok',
-      detail: `Payload clearance minus required ${scenario.site.minGroundClearanceM.toFixed(1)} m minimum, worst trolley position.`,
+      detail: `Payload clearance minus required ${scenario.site.minGroundClearanceM.toFixed(1)} m minimum over the flight span (up to brake entry; brake/capture zones excluded), worst trolley position.`,
       solver: STATIC_SOLVER,
-      inputs: 'Loaded cable profile, payload drop, ground profile (linear interp)',
+      inputs: 'Loaded cable profile, payload drop, capture height above ground, terrain (linear interp)',
       assumptions: STATIC_ASSUME,
     });
   } catch (e) {

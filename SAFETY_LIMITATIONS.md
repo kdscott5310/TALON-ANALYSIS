@@ -42,6 +42,17 @@ No result in this tool authorizes a physical test.
   uplift credits dead weight only (no soil/helical anchors).
 - Block weight and ground friction are provisional field inputs.
 
+### Ground clearance
+- Terrain is modeled as a straight line from the launch-station datum to
+  the brake-end ground, where brake-end ground = capture-point elevation
+  − capture height above ground. Real terrain profiles are not modeled;
+  the linear interpolation is a preliminary approximation.
+- The minimum-clearance requirement is enforced over the flight span (up
+  to brake-zone entry) only. The brake and capture zones are excluded
+  because the trolley intentionally descends to the capture there —
+  clearance in those zones is governed by the capture/brake design, not
+  this check. Verify capture-zone clearances separately.
+
 ## Inputs that require professional / manufacturer validation
 
 The following are **user inputs**. The tool never supplies certified

@@ -1,5 +1,23 @@
 # Release Notes
 
+## v1.1.0 — Ground-clearance model fix
+
+Corrects an over-conservative ground-clearance check that reported a false
+failure when the trolley's capture point sits at or near grade.
+
+- **Capture height above ground** is now an explicit site input, separate
+  from the capture-point elevation, so an elevated capture (on a stand or
+  raised terrain) is modeled directly.
+- The **minimum-clearance requirement applies to the flight span only**
+  (up to brake-zone entry); the brake and capture zones — where the
+  trolley is meant to descend to the capture — are excluded.
+- Scenario **schema v3** with automatic v2→v3 migration (fills the new
+  field at 0 = capture-at-grade and discloses it).
+- 115 tests passing; build clean on the pinned Vite 5 / Vitest 2 stack.
+
+Migration note: existing saved scenarios load unchanged and behave as
+before (capture at grade) until a capture height is entered.
+
 ## v1.0.0 — Preliminary-Design Release (Milestone 5)
 
 First release-ready build of the TALON CUFTS Planner. All five milestones

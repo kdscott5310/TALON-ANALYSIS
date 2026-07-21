@@ -63,7 +63,8 @@ export function buildReportData(
       rows: [
         { label: 'Horizontal main span', value: L(scenario.site.horizontalSpanM) },
         { label: 'High-point elevation', value: L(scenario.site.highPointElevationM) },
-        { label: 'Brake-anchor elevation', value: L(scenario.site.brakeAnchorElevationM) },
+        { label: 'Capture-point elevation', value: L(scenario.site.brakeAnchorElevationM) },
+        { label: 'Capture height above ground', value: L(scenario.site.captureHeightAboveGroundM) },
         { label: 'Launch-anchor offset', value: L(scenario.site.launchAnchorOffsetM) },
         { label: 'Brake-zone length', value: L(scenario.site.brakeZoneLengthM) },
         { label: 'Capture-zone length', value: L(scenario.site.captureZoneLengthM) },

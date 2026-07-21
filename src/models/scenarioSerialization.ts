@@ -22,7 +22,7 @@ import type {
   TrolleyPayload,
 } from './scenario';
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 export const SCENARIO_FILE_TYPE = 'talon-cufts-scenario';
 
 /** Envelope written to exported .json files. */
@@ -151,7 +151,7 @@ export function migrateScenario(raw: unknown): ImportResult {
   if (!isRaw(raw)) return { ok: false, errors: ['Scenario payload is not an object.'] };
 
   const version = raw.schemaVersion;
-  if (version !== 1 && version !== 2) {
+  if (typeof version !== 'number' || version < 1 || version > CURRENT_SCHEMA_VERSION || !Number.isInteger(version)) {
     return {
       ok: false,
       errors: [
@@ -167,6 +167,7 @@ export function migrateScenario(raw: unknown): ImportResult {
     horizontalSpanM: r.num(siteR, 'horizontalSpanM', 'site'),
     highPointElevationM: r.num(siteR, 'highPointElevationM', 'site'),
     brakeAnchorElevationM: r.num(siteR, 'brakeAnchorElevationM', 'site'),
+    captureHeightAboveGroundM: r.numOr(siteR, 'captureHeightAboveGroundM', 'site', 0, 'capture height above ground (0 = capture at grade)'),
     launchAnchorOffsetM: r.num(siteR, 'launchAnchorOffsetM', 'site'),
     brakeZoneLengthM: r.num(siteR, 'brakeZoneLengthM', 'site'),
     captureZoneLengthM: r.num(siteR, 'captureZoneLengthM', 'site'),
@@ -254,8 +255,10 @@ export function migrateScenario(raw: unknown): ImportResult {
   };
 
   if (r.errors.length > 0) return { ok: false, errors: r.errors };
-  if (version === 1 && r.notes.length === 0) {
-    r.notes.push('Migrated schema v1 → v2 (no field changes were required).');
+  if (version < CURRENT_SCHEMA_VERSION && r.notes.length === 0) {
+    r.notes.push(
+      `Migrated schema v${version} → v${CURRENT_SCHEMA_VERSION} (no field changes were required).`,
+    );
   }
   return { ok: true, scenario, migrationNotes: r.notes };
 }
