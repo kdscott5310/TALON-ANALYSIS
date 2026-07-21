@@ -109,9 +109,35 @@ throws instead of defaulting, and quantities absent from the v1 schema (EA,
 unstretched length, wheel inertia) are recorded as missing with a note naming
 the milestone that will need them.
 
+## Milestone 6 — platform-contract verification
+
+Beyond the migration-equivalence suite above, `src/tests/platformCore.test.ts`
+verifies the governance rules structurally rather than by convention:
+
+| Rule | How it is verified |
+|---|---|
+| 1 — never certified | Every `ResultBadge` reports `certificationStatus: 'Not certified'`; asserted on construction |
+| 2 — acceptance | Full truth table over the acceptance inputs: missing data, non-convergence, divergence, out-of-range applicability, unknown ratings, demand exceeding rating, and open critical risks each block an acceptable verdict |
+| 3 — missing ≠ zero | Missing quantities are `null`; derating a missing value stays null; `requireValue` throws |
+| 4 — unverified ≠ verified | `isVerified()` returns false for supplier-listed, imported-unverified, example, estimated, provisional, and obsolete states |
+| 5 — derating preserves source | `derate()` writes `value` while retaining the published figure in `sourceValue`, plus factor and rule |
+| 6 — units and frames | Every quantity carries dimension + SI unit; frame transforms tested including rotation and circular-reference rejection |
+| 9 — reproducibility | Fingerprints are order-independent and stable across runs; frozen runs reject mutation; snapshots survive later mutation of the caller's objects |
+| 11 — reduced-order labeling | Built-in solvers assert `reducedOrder: true`; future element types are flagged; Level 3 cannot be claimed without an imported external result |
+
+**Dimensional consistency (release gate 3)** is checked by exercising the
+dimensional algebra against known relationships: force × length = energy,
+length ÷ time = velocity, velocity ÷ time = acceleration, force ÷ length =
+stiffness, and mass ÷ length = linear density. Incompatible pairs (force vs.
+length, velocity vs. acceleration) are asserted incompatible.
+
+Note: energy and moment share base-unit exponents (kg·m²·s⁻²), so they are
+dimensionally compatible by design; the distinction is semantic and carried by
+the dimension tag, not by the exponents.
+
 ## Test summary
 
-`npm test` runs **142 tests** across 9 suites: units, static solvers,
+`npm test` runs **186 tests** across 10 suites: units, static solvers,
 dynamics, scenario workflow/serialization, benchmarks, invariants, input
-validation, ground clearance, and the generalized model. All pass from a
-clean checkout.
+validation, ground clearance, the generalized model, and the platform core.
+All pass from a clean checkout.

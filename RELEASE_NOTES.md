@@ -1,6 +1,46 @@
 # Release Notes
 
-## Unreleased — Milestone 6: Generalized model architecture
+## Unreleased — Milestone 6: Generalized platform model
+
+Milestone 6 of the [17-milestone v2 roadmap](ROADMAP_V2.md). TALON gains the
+data model and engineering contracts to become a reusable analysis,
+visualization, fixture-planning, hardware-selection, and test-correlation
+platform. **CUFTS remains a built-in fixture template and its results are
+unchanged.**
+
+- **Dimensional types** — quantities are tagged with one of 24 dimensions and
+  their SI unit, with runtime dimensional algebra, so mixing a force with a
+  length is a type error.
+- **Coordinate systems** — all eight required frames (global, local element,
+  crane, trolley-path, wind, payload-body, sensor, customer/range). Every
+  vector result states the frame it is expressed in.
+- **Provenance** — ten verification states. A supplier listing is explicitly
+  *not* verified, and derating preserves the original published value beside
+  the working one.
+- **Solver contracts** — fidelity Levels 0–3 with Level 3 unclaimable without
+  an imported external result; a seven-state applicability engine; and one
+  acceptance function that refuses to call a result acceptable when data is
+  missing, a solver failed, a model is out of range, a rating is unknown, a
+  demand exceeds a rating, or a critical risk is open. Every badge reads
+  **Not certified**.
+- **Immutable analysis runs** — frozen, fingerprinted records carrying every
+  revision, the solver version, the source commit, and a deep-copied input
+  snapshot, so an old report stays reproducible after later software changes.
+- **Fixture templates** — 13 declared; only CUFTS is implemented, and the
+  registry refuses to instantiate the other 12 rather than guessing a model.
+- 186 tests (up from 142), including 44 that verify the governance rules
+  structurally.
+
+No UI or solver behavior changes — the platform layer is additive. Existing
+scenarios, reports, exports, benchmarks, and disclaimers are untouched.
+
+**Accepted exception (release gate 15):** `npm audit` reports 5 vulnerabilities,
+all in devDependencies (Vite, Vitest, vite-node, @vitest/mocker, esbuild);
+`npm audit --omit=dev` reports 0. The deployed static bundle contains none of
+them. Remediation is a major toolchain upgrade scheduled as its own branch —
+see risk R-0.
+
+## Superseded — Milestone 6 first pass: Generalized model architecture
 
 First milestone of the [v2 roadmap](ROADMAP_V2.md): TALON gains a reusable
 project model for cable-supported test fixtures, moving-trolley systems,

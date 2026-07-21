@@ -1,8 +1,28 @@
 # TASKLIST
 
-## v2 platform evolution — see [ROADMAP_V2.md](ROADMAP_V2.md) for M6–M13
+## v2 platform evolution — see [ROADMAP_V2.md](ROADMAP_V2.md) for M6–M17
 
-## Milestone 6 — Generalized model architecture (COMPLETE, branch `milestone-6-generalized-model`)
+## Milestone 6 — Generalized platform model (COMPLETE, branch `milestone-6-generalized-platform`)
+- [x] **Dimensional types** (`src/core/dimensions.ts`): 24 dimensions with SI units and base-unit exponents; compile-time tagging plus runtime dimensional algebra (`productDimension`, `quotientDimension`, `dimensionsCompatible`) — release gate 3
+- [x] **Coordinate systems** (`src/core/coordinates.ts`): all 8 required kinds (global, local element, crane, trolley-path, wind, payload-body, sensor, customer/range) with parent chains, rotation matrices, circular-reference detection, and `FrameVector` so every vector states its frame (Rule 6)
+- [x] **Provenance** (`src/core/provenance.ts`): 9 verification states + provisional; `isVerified()` excludes supplier listings and imported-unverified data (Rules 4, 12); `derate()` preserves the original `sourceValue` (Rule 5); missing stays `null` (Rule 3)
+- [x] **Solver contracts** (`src/core/solver.ts`): fidelity Levels 0–3 with `assertFidelityClaim` blocking unearned Level 3; applicability engine (7 classifications); `overallAcceptance()` as the single Rule-2 decision point; `ResultBadge` always reporting "Not certified" (Rule 1); solver registry with versioned descriptors
+- [x] **Immutable analysis runs** (`src/core/analysisRun.ts`): deep-frozen records with full revision/solver/commit/library provenance, deep-copied input snapshot, order-independent FNV-1a fingerprint and tamper detection (Rule 9)
+- [x] **Expanded elements** (`src/core/elements.ts`): cable, elastic cable, segmented cable, truss, rigid link, linear spring, nonlinear spring, viscous damper, point mass, rigid body, pulley, brake force, contact/stop, support element; beam/frame/shell/solid declared export-only and flagged by `isFutureElementType` (Rule 11)
+- [x] **Fixture-template registry** (`src/core/templates/registry.ts`): 13 templates declared with honest `implemented` / `planned` status and owning milestone; `instantiateTemplate` throws for planned templates rather than guessing a model
+- [x] **Expanded Project** (`src/core/model.ts`): identity/customer/test program, load combinations (no assumed code factors), analysis runs, risks, assumptions, test data, reports, BOM, revisions, review status + referential-integrity checker
+- [x] **CUFTS as first fixture template** (`src/core/templates/cufts.ts`): projects generalized topology while keeping the v1 `Scenario` authoritative; ballast anchors as support elements; crane and trolley-path frames; v1 assumptions recorded with resolution paths
+- [x] Migration from CUFTS scenario schema v1/v2/v3 and project schema v1→v2, every filled field disclosed
+- [x] 186 tests pass (115 v1 unchanged + 27 generalized model + 44 platform core); `npm run build` clean
+- [ ] UI adoption of the project model, fidelity badges in panels/reports — deferred (M6 is a model-layer milestone; no UI regression risk)
+
+## Milestone 7 — Data provenance and component library (NEXT)
+- [ ] Versioned component library across the full category list
+- [ ] Full property provenance (source document/URL/page, revision, dates, duty cycle, derating rule)
+- [ ] Library import/export, source attachments, initial component adapters
+- [ ] Online-retrieval adapter architecture: imported-unverified by default, verified records never overwritten
+
+## Superseded — earlier M6 draft (branch `milestone-6-generalized-model`)
 - [x] `src/core/provenance.ts` — Quantity + Provenance with 5 verification states (verified / provisional / estimated / example / missing); missing is `value: null` and is never coerced to 0 (Rule 2)
 - [x] `src/core/geometry.ts` — Vec3, coordinate systems, nodes (3D from the start so M8 lateral + M11 3D need no schema break)
 - [x] `src/core/elements.ts` — materials + 7 element types: cable, truss, rigid link, linear spring, viscous damper, point mass, brake/contact

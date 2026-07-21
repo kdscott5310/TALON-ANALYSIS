@@ -1761,45 +1761,112 @@ At the end, provide:
 7. Exact commands to run the application
 
 ________________________________________
-# PLATFORM SCOPE EXTENSION (v2, Milestone 6 onward)
+# PLATFORM SCOPE EXTENSION (v2, Milestones 6–17)
 
-The specification above defines the CUFTS application, which remains the
-authoritative requirement set for the CUFTS **template**.
+The specification above defines the CUFTS application and remains the
+authoritative requirement set for the **CUFTS fixture template**.
 
-From Milestone 6, TALON is additionally a reusable engineering analysis
-platform for cable-supported test fixtures, moving trolley systems,
-crane-supported fixtures, portable test structures, and related mechanical
-systems. See [ROADMAP_V2.md](ROADMAP_V2.md) for Milestones 6–13.
+From Milestone 6, TALON is additionally a reusable platform for engineering
+analysis, visualization, fixture planning, hardware selection, and test-data
+correlation. See [ROADMAP_V2.md](ROADMAP_V2.md) for Milestones 6–17.
 
-## Generalized model (implemented, M6)
+## Product goals
 
-A `Project` describes a system independently of CUFTS: coordinate systems,
-nodes, materials, components, elements, supports, constraints, loads, load
-cases, moving bodies, analysis cases, solver results, and verification
-metadata. Element types are cable, truss, rigid link, linear spring, viscous
-damper, point mass, and brake/contact force.
+TALON shall be able to model a wide variety of mechanical and cable-supported
+test fixtures; display anticipated trajectories, clearances, loads, motion,
+braking, payload orientation, and fixture behavior to engineers, customers, and
+operators; let users build systems from reusable engineering components;
+maintain a traceable component library; import manufacturer or supplier data
+with source, revision, confidence, and verification status; recommend candidate
+hardware from calculated demands; produce a bill of materials and procurement
+search sheet; generate customer-facing visualizations and operator test
+previews; compare predicted with measured test data; and provide a pathway
+toward generalized structural analysis and external finite-element solvers.
 
-CUFTS is preserved as a built-in template. Its `Scenario` remains the
-authoritative input for the validated v1 solvers, which run unchanged behind an
-adapter; the generalized topology is projected from it. Scenario files of
-schema v1/v2/v3 migrate into projects with every filled field disclosed.
+Supported system types include cable-supported fixtures, crane-supported
+systems, moving trolley systems, suspended payloads, drop fixtures, rail
+fixtures, tower-supported systems, tow systems, sensor and seeker test
+fixtures, UAS test systems, and other mechanical test arrangements.
 
-## Data verification requirement (all milestones)
+TALON remains an engineering planning and analysis platform. It shall never
+claim to replace licensed engineering review, crane-company approval, certified
+load charts, rigging approval, structural certification, range-safety approval,
+or manufacturer data.
 
-Every engineering property carries a verification state — verified,
-provisional, estimated, example, or missing — plus source, reference, date,
-confidence, and derating. A missing rating is stored as null and is never
-substituted with zero or an assumed safe value. Dependent checks report
-insufficient information rather than passing or failing.
+## Engineering governance
 
-## Future FEA path
+1. Never describe preliminary analysis as certified or approved.
+2. Never mark a result acceptable when required data is missing, a solver
+   failed, a model is outside its applicability range, a critical property is
+   unverified, a required rating is unknown, a calculated load exceeds a
+   rating, or a critical risk is unresolved.
+3. Never silently replace missing values with zero.
+4. Never silently use example or estimated manufacturer properties as verified.
+5. Preserve the original source value separately from any engineering derating.
+6. Every calculated result identifies solver, solver version, fidelity level,
+   units, coordinate system, assumptions, input sources, verification status,
+   convergence status, applicability status, and unresolved limitations.
+7. Keep engineering calculations independent from React components.
+8. Use SI internally and convert only at defined interfaces.
+9. Preserve deterministic and reproducible results.
+10. Add analytical benchmarks before declaring a new solver complete.
+11. Clearly distinguish reduced-order dynamics from full finite-element
+    analysis.
+12. Never use online product data as certified without user verification.
 
-The generalized model is designed to later support 2D truss, 2D frame, 3D
-truss, nonlinear cable/truss, modal, and transient structural analysis, and
-export to an external validated FEA solver.
+## Analysis fidelity levels
 
-Explicitly **out of scope** and documented as future external-solver
-integrations: shell elements, solid elements, automatic meshing, nonlinear
-contact, and plasticity. TALON does not claim FEA capabilities it does not
-implement; reduced-order and lumped-parameter models are labeled as such
-wherever they appear.
+Every analysis carries a visible level: **Level 0 Screening**, **Level 1
+Preliminary Design**, **Level 2 Advanced Preliminary**, **Level 3 External
+Validated Analysis**. Level 3 shall not be claimed unless an external solver
+result has actually been imported and identified. The existing TALON v1 solvers
+are Level 1.
+
+Every result panel and report shall display analysis level, solver, validation
+state, input confidence, applicability, and certification status.
+
+## Generalized project architecture (implemented, M6)
+
+A `Project` contains identity, customer, test program, configuration template,
+site, geometry, coordinate systems, materials, components, nodes, elements,
+supports, constraints, loads, load cases, load combinations, moving bodies,
+analysis cases, analysis runs, risks, assumptions, test data, reports, bill of
+materials, revisions, and review status.
+
+**Coordinate systems.** Global, local element, crane, trolley-path, wind,
+payload-body, sensor, and customer/range reference. Every vector result states
+its coordinate system.
+
+**Nodes** may represent anchors, crane hooks, master rings, trolley positions,
+supports, frame joints, sensor points, payload attachment points, brake
+attachment points, and ground contact points.
+
+**Elements.** Cable, elastic cable, segmented cable, truss, rigid link, linear
+spring, nonlinear spring, viscous damper, point mass, rigid body, pulley or
+sheave, brake-force element, contact or stop element, and support element.
+Beam, frame, shell-export, and solid-export types are declared for
+forward compatibility and export only; TALON does not analyze them.
+
+**Fixture templates** are assemblies of reusable model entities rather than
+separate custom solvers. The catalogue is declared with honest status; a
+template that is not implemented cannot be instantiated. CUFTS is the first
+implemented template and its results are unchanged.
+
+**Immutable analysis runs.** A completed run preserves project, fixture,
+scenario and schema revisions, solver version, source commit, component-library
+revision, input snapshot, settings, units, coordinate systems, date, author,
+results, warnings, applicability, convergence, validation status, risks, and
+report revision. A previous analysis report remains reproducible after later
+software changes.
+
+## Future finite-element path
+
+The architecture shall support future 2D truss, 2D frame, 3D truss, nonlinear
+cable/truss, modal, and transient structural analysis, plus external solver
+export and import.
+
+Not implemented initially, and documented as future external-solver
+integrations: solid meshing, shell meshing, complex contact, material
+plasticity, fracture, and commercial-solver replacement. TALON is a
+model-building, load-generation, fixture-configuration, visualization,
+traceability, procurement, and reporting front end.

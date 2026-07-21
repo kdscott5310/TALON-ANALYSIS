@@ -48,7 +48,15 @@ validation; see [SAFETY_LIMITATIONS.md](SAFETY_LIMITATIONS.md).
 | §16 | Unit switching (US ↔ SI) | `units/units.ts`, header selector | `units.test.ts` | Header | Implemented |
 | §17 | Baseline example configuration loaded on startup | `models/exampleScenario.ts` | `scenarioWorkflow.test.ts` | Default scenario | Implemented |
 | §M5 | Requirements traceability, benchmarks, error boundary, release docs | this file, `benchmarks.ts`, `ErrorBoundary.tsx`, README | `benchmarks.test.ts`, `invariants.test.ts` | Validation tab | Implemented |
-| §M6 | Generalized project model (projects, templates, nodes, coordinate systems, elements, materials, components, supports, constraints, loads, load cases, moving bodies, analysis cases, solver results, verification metadata) | `core/model.ts`, `core/geometry.ts`, `core/elements.ts` | `generalizedModel.test.ts` | — (model layer; UI adoption later) | Implemented |
+| §M6 | Generalized project model (identity, customer, test program, template, coordinate systems, materials, components, nodes, elements, supports, constraints, loads, load cases, load combinations, moving bodies, analysis cases, analysis runs, risks, assumptions, test data, reports, BOM, revisions, review status) | `core/model.ts`, `core/coordinates.ts`, `core/elements.ts` | `generalizedModel.test.ts`, `platformCore.test.ts` | — (model layer; UI adoption later) | Implemented |
+| §M6 | Dimensional quantity types; dimensional consistency (release gate 3) | `core/dimensions.ts` | `platformCore.test.ts` | — | Implemented |
+| §M6 | Eight coordinate-system kinds; every vector states its frame | `core/coordinates.ts` | `platformCore.test.ts` | — | Implemented |
+| §M6 | Solver interfaces: fidelity Levels 0–3, applicability engine, acceptance rule, result badge | `core/solver.ts` | `platformCore.test.ts` | Badge fields defined; panel rendering deferred | Partial (contracts done; UI badges M15) |
+| §M6 | Level 3 never claimed without an imported external result | `core/solver.ts` (`assertFidelityClaim`) | `platformCore.test.ts` | — | Implemented |
+| §M6 | Immutable, reproducible analysis runs | `core/analysisRun.ts` | `platformCore.test.ts` | — | Implemented |
+| §M6 | Fixture-template architecture; unimplemented templates cannot be instantiated | `core/templates/registry.ts` | `platformCore.test.ts` | — | Implemented (CUFTS only; 12 planned) |
+| §M6 | Original source value preserved separately from derating (Rule 5) | `core/provenance.ts` (`derate`) | `platformCore.test.ts` | — | Implemented |
+| §M6 | Future element types declared, not analyzed (Rule 11) | `core/elements.ts` | `platformCore.test.ts` | — | Implemented |
 | §M6 | Element types: cable, truss, rigid link, linear spring, viscous damper, point mass, brake/contact | `core/elements.ts` | `generalizedModel.test.ts` | — | Implemented |
 | §M6 | Verified / provisional / estimated / example / missing data states; missing never defaulted | `core/provenance.ts` | `generalizedModel.test.ts` (provenance rules) | PROVISIONAL / NOT ENTERED flags | Implemented |
 | §M6 | CUFTS preserved as a built-in project template | `core/templates/cufts.ts` | `generalizedModel.test.ts` (topology, round-trip) | Existing CUFTS UI unchanged | Implemented |

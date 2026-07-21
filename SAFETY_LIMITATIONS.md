@@ -86,20 +86,52 @@ independently verified by qualified professionals before use:
 - Wind, gust, and out-of-plane loading limits.
 - All operating procedures, interlocks, and abort criteria.
 
+## Analysis fidelity levels
+
+Every analysis carries a visible fidelity level. **Levels 0–2 are all
+preliminary** and none is certified.
+
+| Level | Name | What it means |
+|---|---|---|
+| 0 | Screening | Conservative closed-form feasibility checks |
+| 1 | Preliminary design | Simplified models — **all current TALON solvers are Level 1** |
+| 2 | Advanced preliminary | Numerical/coupled models (M8 onward) |
+| 3 | External validated | Only when a validated external solver result has actually been imported and identified |
+
+TALON never self-declares Level 3, and reduced-order or lumped-parameter models
+are never presented as finite-element analysis.
+
 ## Data verification states (generalized model, M6)
 
-Every engineering property in the generalized project model carries an explicit
-verification state. Only **verified** data — confirmed against a manufacturer
-certificate, test report, standard, or field measurement with a cited source —
-may support a decision about a physical test.
+Every engineering property carries an explicit verification state. Only
+**manufacturer verified**, **user verified**, or **internally tested** data
+counts as verified — and even then, only after engineering review may it
+support a decision about a physical test.
 
 | State | Meaning | Fit to authorize a test? |
 |---|---|---|
-| `verified` | Confirmed against a cited source | Only after engineer review |
+| `manufacturerVerified` | Confirmed against the manufacturer's current document | Only after engineer review |
+| `userVerified` | Confirmed by the user against a cited source | Only after engineer review |
+| `internallyTested` | Measured by the organization's own test | Only after engineer review |
+| `supplierListed` | From a distributor/supplier summary, not the maker | **No** — not engineering proof |
 | `provisional` | Entered by the engineer, pending verification | **No** |
 | `estimated` | Derived or inferred (geometry, correlation) | **No** |
-| `example` | Illustrative placeholder shipped with a template | **No — never** |
+| `exampleOnly` | Illustrative placeholder shipped with the software | **No — never** |
+| `importedUnverified` | Pulled from an online/imported source, unchecked | **No** |
+| `obsolete` | Superseded; retained for history | **No** |
 | `missing` | Not supplied | **No** — dependent checks report insufficient information |
+
+A derated value never destroys the published figure: the original is preserved
+alongside it, with the derating factor and the rule that produced it.
+
+## When a result is never acceptable
+
+A result is **never** reported as acceptable when required data is missing, a
+solver failed or did not converge, the model is outside its applicability
+range, a critical property is unverified, a required rating is unknown, a
+calculated load exceeds a rating, or a critical risk remains unresolved. In
+those cases the result is reported as *not acceptable* or *insufficient
+information* — never as a pass.
 
 A `missing` value is stored as `null`, not zero. Calculations must branch on it
 and report *insufficient information*; they must not pass, fail, or assume a

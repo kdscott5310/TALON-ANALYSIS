@@ -1,6 +1,25 @@
 # CHANGELOG
 
-## Unreleased — Milestone 6: Generalized model architecture
+## Unreleased — Milestone 6: Generalized platform model
+
+Second and final pass of Milestone 6 under the expanded 17-milestone platform
+plan. Builds on the generalized model below and adds the platform contracts.
+
+- Added **dimensional quantity types** (`src/core/dimensions.ts`): 24 dimensions with canonical SI units and base-unit exponents, runtime dimensional algebra (`productDimension`, `quotientDimension`, `dimensionsCompatible`), and compile-time dimension tags on `Quantity<D>` so a force cannot be passed where a length is expected (release gate 3).
+- Added the **eight coordinate-system kinds** (`src/core/coordinates.ts`) — global, local element, crane, trolley-path, wind, payload-body, sensor, customer/range — with parent chains, direction-cosine rotation, circular-reference detection, node roles, and `FrameVector`, so every vector result states the frame it is expressed in (Rule 6).
+- Expanded **provenance** to the specified verification states (manufacturer verified, user verified, internally tested, supplier listed, provisional, estimated, example only, imported unverified, obsolete, missing). `isVerified()` deliberately excludes supplier listings and imported data (Rules 4, 12). `derate()` writes the working value while preserving the original published figure in `sourceValue` (Rule 5).
+- Added **solver contracts** (`src/core/solver.ts`): fidelity Levels 0–3 with `assertFidelityClaim` refusing an unearned Level 3; a 7-state applicability engine; `overallAcceptance()` as the single place Rule 2 is decided (never acceptable with missing data, failed/non-converged solves, out-of-range models, unknown ratings, demand exceeding rating, or open critical risks); and a `ResultBadge` whose certification status is always "Not certified" (Rule 1). Built-in v1 solvers are registered as Level 1, reduced-order (Rule 11).
+- Added **immutable analysis runs** (`src/core/analysisRun.ts`): deep-frozen records carrying project/fixture/scenario/schema revisions, solver version, source commit, component-library revision, deep-copied input snapshot, settings, units, coordinate systems, results, warnings, applicability, convergence, and open risks — with an order-independent FNV-1a fingerprint for tamper detection. Documented as a change-detection checksum, not a cryptographic hash.
+- Expanded the **element set** to cable, elastic cable, segmented cable, truss, rigid link, linear spring, nonlinear spring, viscous damper, point mass, rigid body, pulley/sheave, brake force, contact/stop, and support element; beam, frame, shell-export, and solid-export are declared for forward compatibility and flagged by `isFutureElementType` as not analyzed (Rule 11).
+- Added the **fixture-template registry** (`src/core/templates/registry.ts`): 13 templates declared with honest implemented/planned status and owning milestone. `instantiateTemplate` throws for planned templates rather than returning an empty or guessed model.
+- Expanded **Project** with identity/customer/test program, load combinations (no building-code factors assumed), analysis runs, risks, assumptions, test data, reports, BOM lines, revisions, and review status; integrity checking now covers coordinate-system parents, load combinations, and report→run references.
+- CUFTS template now emits crane and trolley-path frames, ballast anchors as support elements, a service load combination, and the v1 modeling assumptions each with a resolution path naming the milestone that retires it.
+- Added 44 platform-core tests (`src/tests/platformCore.test.ts`) covering dimensional algebra, frame transforms, derating provenance, the full acceptance truth table, fidelity gating, run immutability and tamper detection, and template-registry honesty.
+- Rewrote [ROADMAP_V2.md](ROADMAP_V2.md) for the 17-milestone plan with governance rules, fidelity levels, release gates, and a risk register including the documented dev-toolchain exception.
+- Total test count: 186 (115 v1 unchanged + 27 generalized model + 44 platform core).
+- No UI or solver behavior changed; the platform layer remains additive.
+
+## Superseded — Milestone 6 first pass: Generalized model architecture
 - Added `src/core/`, a reusable project model for cable-supported test fixtures, moving-trolley systems, crane-supported fixtures, and portable test structures. Pure data, no React, SI throughout (Rules 5–6).
 - Added provenance-carrying quantities (`src/core/provenance.ts`): every engineering property records value + SI unit + verification state (**verified / provisional / estimated / example / missing**), source, reference, date, confidence, and derating. A missing rating is `value: null` and is structurally incapable of being read as zero; `requireValue` throws rather than defaulting (Rules 2–3).
 - Added geometry primitives (`src/core/geometry.ts`): 3D vectors, coordinate systems, and nodes. The CUFTS template is planar (y = 0) but the schema is 3D from the start so the M8 lateral cable model and M11 3D views need no schema break.
