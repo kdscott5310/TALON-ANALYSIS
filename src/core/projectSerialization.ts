@@ -153,6 +153,8 @@ function adoptProject(raw: Record<string, unknown>): ProjectImportResult {
 
   // CUFTS projects: re-validate and re-derive from the scenario so the
   // generalized entities always agree with the authoritative inputs.
+  // Re-deriving is also how project schema v1 files gain the v2 entities
+  // (coordinate systems, load combinations, assumptions) without data loss.
   if (template.id === 'cufts') {
     const templateData = raw.templateData;
     if (!isRecord(templateData) || !isRecord(templateData.cufts)) {

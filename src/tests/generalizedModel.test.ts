@@ -30,8 +30,8 @@ import {
   projectFromScenario,
 } from '../core/projectSerialization';
 import { checkProjectIntegrity, PROJECT_SCHEMA_VERSION } from '../core/model';
-import { isCable, isPointMass, isBrakeContact } from '../core/elements';
-import { globalPosition } from '../core/geometry';
+import { isCable, isPointMass, isBrakeForce } from '../core/elements';
+import { globalPosition } from '../core/coordinates';
 import { isMissing, requireValue, worstState, valueOrNull } from '../core/provenance';
 import { ftToM, lbfToN } from '../units/units';
 
@@ -148,7 +148,7 @@ describe('CUFTS template topology', () => {
       9,
     );
 
-    const brakes = project.elements.filter(isBrakeContact);
+    const brakes = project.elements.filter(isBrakeForce);
     expect(brakes).toHaveLength(1);
     expect(brakes[0].lawId).toBe(exampleScenario.brake.brakeLaw);
   });
@@ -159,8 +159,11 @@ describe('CUFTS template topology', () => {
     expect(project.movingBodies).toHaveLength(1);
     expect(project.movingBodies[0].pathElementId).toBe(CUFTS_IDS.mainLineElement);
     expect(project.analysisCases.map((a) => a.solverId).sort()).toEqual(
-      ['parabolic-v1', 'rk4-trolley-v1'].sort(),
+      ['cufts-parabolic-static', 'cufts-rk4-trolley'].sort(),
     );
+    // Every analysis case declares its fidelity level (Rule 6).
+    expect(project.analysisCases.every((a) => a.fidelity === 1)).toBe(true);
+    expect(project.analysisCases.every((a) => a.solverVersion.length > 0)).toBe(true);
   });
 
   it('round-trips the scenario losslessly through the template', () => {
@@ -172,7 +175,7 @@ describe('provenance rules', () => {
   it('marks example-scenario values as example, never verified', () => {
     const project = buildCuftsProject(exampleScenario);
     const main = project.elements.filter(isCable).find((c) => c.id === CUFTS_IDS.mainLineElement)!;
-    expect(main.minBreakingStrength!.provenance.state).toBe('example');
+    expect(main.minBreakingStrength!.provenance.state).toBe('exampleOnly');
     expect(project.verification.overallState).not.toBe('verified');
     expect(project.verification.engineerReviewed).toBe(false);
   });
@@ -187,7 +190,7 @@ describe('provenance rules', () => {
   it('represents un-entered ratings as MISSING, never zero (Rule 2)', () => {
     // The baseline example leaves brake capacity and trolley rating unentered.
     const project = buildCuftsProject(exampleScenario);
-    const brake = project.elements.filter(isBrakeContact)[0];
+    const brake = project.elements.filter(isBrakeForce)[0];
     expect(isMissing(brake.forceCapacity)).toBe(true);
     expect(brake.forceCapacity!.value).toBeNull();
     expect(valueOrNull(brake.forceCapacity)).toBeNull();
@@ -198,7 +201,7 @@ describe('provenance rules', () => {
 
   it('carries entered ratings through as real values', () => {
     const project = buildCuftsProject(userScenario());
-    const brake = project.elements.filter(isBrakeContact)[0];
+    const brake = project.elements.filter(isBrakeForce)[0];
     expect(isMissing(brake.forceCapacity)).toBe(false);
     expect(requireValue(brake.forceCapacity, 'brake capacity')).toBeCloseTo(lbfToN(10000), 6);
   });
@@ -209,13 +212,13 @@ describe('provenance rules', () => {
     // EA and unstretched length are required by M7 but not supplied by v1.
     expect(isMissing(main.axialStiffness)).toBe(true);
     expect(isMissing(main.unstretchedLength)).toBe(true);
-    expect(main.axialStiffness!.provenance.notes).toMatch(/M7/);
+    expect(main.axialStiffness!.provenance.notes).toMatch(/M8/);
     expect(isMissing(project.movingBodies[0].wheelRotaryInertia)).toBe(true);
   });
 
   it('requireValue throws rather than substituting a default', () => {
     const project = buildCuftsProject(exampleScenario);
-    const brake = project.elements.filter(isBrakeContact)[0];
+    const brake = project.elements.filter(isBrakeForce)[0];
     expect(() => requireValue(brake.forceCapacity, 'brake capacity')).toThrow(/missing/i);
   });
 
@@ -223,7 +226,7 @@ describe('provenance rules', () => {
     const project = buildCuftsProject(exampleScenario);
     const main = project.elements.filter(isCable).find((c) => c.id === CUFTS_IDS.mainLineElement)!;
     expect(worstState([main.linearMass, main.axialStiffness])).toBe('missing');
-    expect(worstState([main.linearMass, main.designFactor])).toBe('example');
+    expect(worstState([main.linearMass, main.designFactor])).toBe('exampleOnly');
   });
 });
 

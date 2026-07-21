@@ -1,24 +1,22 @@
 /**
- * CUFTS project template — Milestone 6.
+ * CUFTS fixture template — Milestone 6.
  *
- * Builds a generalized `Project` from the v1 CUFTS `Scenario`, and extracts
- * the `Scenario` back out again so the existing, benchmarked solvers keep
- * running unchanged behind an adapter.
+ * Builds a generalized `Project` from the v1 CUFTS `Scenario`, and extracts the
+ * `Scenario` back out so the existing, benchmarked solvers keep running
+ * unchanged behind an adapter.
  *
  * ═══════════════════════════════════════════════════════════════════════
  * WHY THE SCENARIO IS PRESERVED VERBATIM
  * ═══════════════════════════════════════════════════════════════════════
  * The v1 solvers (parabolic cable, master-node equilibrium, anchor checks,
- * RK4 trolley dynamics) are validated by 115 tests and 16 analytical
- * benchmarks. Re-deriving their inputs from the generalized entities would
- * risk silent numerical drift. So the template stores the `Scenario` as
+ * RK4 trolley dynamics) are covered by 16 analytical benchmarks and 115 tests.
+ * Re-deriving their inputs from the generalized entities would risk silent
+ * numerical drift, so the template stores the `Scenario` as
  * `templateData.cufts` — the authoritative input — and *projects* the
- * generalized topology (nodes, elements, supports, loads, moving body) from
- * it for the platform layer, visualization, and future solvers.
- *
- * The projection is therefore derived data. `extractScenario` returns the
- * stored scenario, which makes `Scenario → Project → Scenario` exactly
- * lossless and keeps every v1 result bit-identical.
+ * generalized topology from it for the platform layer, visualization, and
+ * future solvers. `extractScenario` returns that stored scenario, which makes
+ * `Scenario → Project → Scenario` exactly lossless and keeps every v1 result
+ * bit-identical (release gate 17).
  *
  * ═══════════════════════════════════════════════════════════════════════
  * GEOMETRY MAPPING (matches src/calculations/layoutGeometry.ts)
@@ -27,7 +25,7 @@
  *   master node    x = launchAnchorOffset,      z = highPointElevation
  *   capture point  x = offset + horizontalSpan, z = brakeAnchorElevation
  *   brake ground   same x as capture,           z = capture − captureHeight
- * All y = 0: the CUFTS template is planar until the M8 lateral model.
+ * All y = 0: the CUFTS template is planar until the M11 lateral model.
  */
 
 import type { Scenario } from '../../models/scenario';
@@ -36,14 +34,16 @@ import {
   globalCoordinateSystem,
   GLOBAL_CS_ID,
   vec3,
+  type CoordinateSystem,
   type ModelNode,
-} from '../geometry';
+} from '../coordinates';
 import type {
-  BrakeContactElement,
+  BrakeForceElement,
   CableElement,
   Element,
   Material,
   PointMassElement,
+  SupportElementDef,
 } from '../elements';
 import {
   exampleValue,
@@ -52,19 +52,24 @@ import {
   worstState,
   type Quantity,
 } from '../provenance';
+import type { Dimension } from '../dimensions';
+import { PARABOLIC_STATIC_V1, RK4_TROLLEY_V1 } from '../solver';
 import {
   PROJECT_SCHEMA_VERSION,
   type AnalysisCase,
+  type AssumptionEntry,
   type Constraint,
   type Load,
   type LoadCase,
+  type LoadCombination,
   type MovingBody,
   type Project,
   type Support,
   type VerificationMetadata,
 } from '../model';
+import { getTemplateInfo, registerTemplateBuilder } from './registry';
 
-// Stable ids so migrated projects are reproducible (Rule 8).
+/** Stable ids so migrated projects are reproducible (Rule 9). */
 export const CUFTS_IDS = {
   launchAnchorNode: 'node-launch-anchor',
   masterNode: 'node-master',
@@ -74,7 +79,9 @@ export const CUFTS_IDS = {
   backstayElement: 'elem-backstay-cable',
   mainLineElement: 'elem-main-line-cable',
   trolleyMassElement: 'elem-trolley-mass',
-  brakeElement: 'elem-brake-contact',
+  brakeElement: 'elem-brake-force',
+  launchAnchorElement: 'elem-launch-anchor-ballast',
+  brakeAnchorElement: 'elem-brake-anchor-ballast',
   cableMaterial: 'mat-cable',
   trolleyBody: 'body-trolley',
   gravityLoad: 'load-gravity',
@@ -83,21 +90,21 @@ export const CUFTS_IDS = {
   brakeLoad: 'load-brake',
   staticCase: 'lc-static',
   dynamicCase: 'lc-dynamic',
+  serviceCombination: 'combo-service',
   staticAnalysis: 'ac-static-sweep',
   dynamicAnalysis: 'ac-dynamic-run',
 } as const;
 
 /**
  * Example-scenario values are illustrative placeholders; a user-edited
- * scenario is treated as provisional (entered but unverified). Neither is
- * ever `verified` — that requires explicit user confirmation with a source.
+ * scenario is provisional (entered but unverified). Neither is ever verified —
+ * that requires explicit user confirmation against a cited source (Rule 4).
  */
 function stateFor(scenario: Scenario) {
-  return scenario.isUnverifiedExample
-    ? (v: number, unit: Parameters<typeof exampleValue>[1], note?: string): Quantity =>
-        exampleValue(v, unit, note)
-    : (v: number, unit: Parameters<typeof provisional>[1], note?: string): Quantity =>
-        provisional(v, unit, note);
+  return <D extends Dimension>(v: number, dimension: D, note?: string): Quantity<D> =>
+    scenario.isUnverifiedExample
+      ? exampleValue(v, dimension, note)
+      : provisional(v, dimension, note);
 }
 
 /** Builds the generalized project representation of a CUFTS scenario. */
@@ -112,6 +119,29 @@ export function buildCuftsProject(
   const captureX = site.launchAnchorOffsetM + site.horizontalSpanM;
   const brakeGroundZ = site.brakeAnchorElevationM - site.captureHeightAboveGroundM;
 
+  // ── coordinate systems ─────────────────────────────────────────────────
+  const coordinateSystems: CoordinateSystem[] = [
+    globalCoordinateSystem(),
+    {
+      id: 'cs-crane',
+      name: 'Crane',
+      kind: 'crane',
+      origin: vec3(masterX, 0, 0),
+      rotation: null,
+      parentId: GLOBAL_CS_ID,
+      description: 'Origin at the crane station on the ground; axes parallel to global.',
+    },
+    {
+      id: 'cs-trolley-path',
+      name: 'Trolley path',
+      kind: 'trolleyPath',
+      origin: vec3(masterX, 0, site.highPointElevationM),
+      rotation: null,
+      parentId: GLOBAL_CS_ID,
+      description: 'Origin at the master node; x measured downrange along the main span.',
+    },
+  ];
+
   // ── nodes ──────────────────────────────────────────────────────────────
   const nodes: ModelNode[] = [
     {
@@ -119,35 +149,39 @@ export function buildCuftsProject(
       name: 'Launch anchor',
       csId: GLOBAL_CS_ID,
       position: vec3(0, 0, 0),
+      role: 'anchor',
     },
     {
       id: CUFTS_IDS.masterNode,
-      name: 'Master node (crane hook)',
+      name: 'Master ring / crane hook',
       csId: GLOBAL_CS_ID,
       position: vec3(masterX, 0, site.highPointElevationM),
+      role: 'masterRing',
     },
     {
       id: CUFTS_IDS.capturePointNode,
       name: 'Capture point / cable terminus',
       csId: GLOBAL_CS_ID,
       position: vec3(captureX, 0, site.brakeAnchorElevationM),
+      role: 'brakeAttachment',
     },
     {
       id: CUFTS_IDS.brakeGroundNode,
       name: 'Brake-end ground',
       csId: GLOBAL_CS_ID,
       position: vec3(captureX, 0, brakeGroundZ),
+      role: 'groundContact',
     },
     {
       id: CUFTS_IDS.trolleyNode,
       name: 'Trolley',
       csId: GLOBAL_CS_ID,
-      // Initial position: release station on the main line.
       position: vec3(
         masterX + scenario.dynamics.releasePositionFrac * site.horizontalSpanM,
         0,
         site.highPointElevationM,
       ),
+      role: 'trolley',
     },
   ];
 
@@ -157,26 +191,38 @@ export function buildCuftsProject(
       id: CUFTS_IDS.cableMaterial,
       name: scenario.cable.materialLabel,
       category: 'cable material',
-      // EA / modulus are not part of the v1 Scenario: genuinely missing, not 0.
-      elasticModulus: missing('Pa', 'Not supplied by the v1 CUFTS scenario; required by the M7 nonlinear solver.'),
-      density: missing('kg/m^3', 'Linear mass is supplied instead; bulk density unknown.'),
-      thermalExpansion: missing('1/K', 'Required for M7 temperature strain.'),
+      elasticModulus: missing(
+        'pressure',
+        'Not supplied by the v1 CUFTS scenario; required by the M8 nonlinear cable solver.',
+      ),
+      density: missing('density', 'Linear mass is supplied instead; bulk density unknown.'),
+      thermalExpansion: missing('thermalExpansion', 'Required for M8 temperature strain.'),
       notes: 'Cable material properties require manufacturer verification.',
     },
   ];
 
   // ── cable elements ─────────────────────────────────────────────────────
   const cableCommon = {
-    linearMass: q(scenario.cable.linearMassKgPerM, 'kg/m'),
-    diameter: q(scenario.cable.diameterM, 'm'),
-    minBreakingStrength: q(scenario.cable.minBreakingStrengthN, 'N', 'Requires manufacturer certificate.'),
-    designFactor: q(scenario.cable.designFactor, '1'),
-    pretension: q(scenario.cable.pretensionN, 'N'),
-    // Not in the v1 scenario — missing, never defaulted (Rule 2).
-    axialStiffness: missing('N', 'EA not supplied by the v1 scenario; required by the M7 nonlinear cable solver.'),
-    unstretchedLength: missing('m', 'Not supplied by the v1 scenario; M7 solves compatibility from it.'),
-    creepAllowance: missing('1', 'Constructional stretch allowance not supplied.'),
-    dampingRatio: missing('1', 'Cable damping not supplied; required by M8.'),
+    linearMass: q(scenario.cable.linearMassKgPerM, 'linearDensity'),
+    diameter: q(scenario.cable.diameterM, 'length'),
+    minBreakingStrength: q(
+      scenario.cable.minBreakingStrengthN,
+      'force',
+      'Requires manufacturer certificate.',
+    ),
+    designFactor: q(scenario.cable.designFactor, 'dimensionless'),
+    pretension: q(scenario.cable.pretensionN, 'force'),
+    // Absent from the v1 scenario — genuinely missing, never defaulted (Rule 3).
+    axialStiffness: missing(
+      'force',
+      'EA not supplied by the v1 scenario; required by the M8 nonlinear cable solver.',
+    ),
+    unstretchedLength: missing(
+      'length',
+      'Not supplied by the v1 scenario; M8 solves compatibility from it.',
+    ),
+    creepAllowance: missing('dimensionless', 'Constructional stretch allowance not supplied.'),
+    dampingRatio: missing('dimensionless', 'Cable damping not supplied; required by M11.'),
     materialId: CUFTS_IDS.cableMaterial,
   };
 
@@ -196,7 +242,7 @@ export function buildCuftsProject(
     ...cableCommon,
   };
 
-  // ── trolley mass and brake elements ────────────────────────────────────
+  // ── trolley mass and brake ─────────────────────────────────────────────
   const totalMovingMass = scenario.trolley.trolleyMassKg + scenario.trolley.testArticleMassKg;
 
   const trolleyMass: PointMassElement = {
@@ -204,48 +250,83 @@ export function buildCuftsProject(
     name: 'Trolley + test article',
     type: 'pointMass',
     nodeIds: [CUFTS_IDS.trolleyNode],
-    mass: q(totalMovingMass, 'kg'),
-    rotaryInertia: missing('kg*m^2', 'Wheel rotary inertia not supplied; required by M8.'),
+    mass: q(totalMovingMass, 'mass'),
+    rotaryInertia: missing('rotaryInertia', 'Wheel rotary inertia not supplied; required by M9.'),
   };
 
-  const brake: BrakeContactElement = {
+  const brake: BrakeForceElement = {
     id: CUFTS_IDS.brakeElement,
     name: `Ground brake (${scenario.brake.brakeType})`,
-    type: 'brakeContact',
+    type: 'brakeForce',
     nodeIds: [CUFTS_IDS.trolleyNode, CUFTS_IDS.capturePointNode],
     lawId: scenario.brake.brakeLaw,
     parameters: {
-      brakeForce: q(scenario.brake.brakeForceN, 'N'),
-      velocityCoefficient: q(scenario.brake.velocityCoeffNsPerM, 'N*s/m'),
-      maxDeceleration: q(scenario.brake.maxDecelerationMps2, 'm/s^2'),
+      brakeForce: q(scenario.brake.brakeForceN, 'force'),
+      velocityCoefficient: q(scenario.brake.velocityCoeffNsPerM, 'dampingCoefficient'),
+      maxDeceleration: q(scenario.brake.maxDecelerationMps2, 'acceleration'),
     },
-    engagementPosition: q(site.horizontalSpanM - site.brakeZoneLengthM, 'm'),
-    availableStroke: q(scenario.brake.availableStrokeM, 'm'),
-    // A capacity of 0 in v1 means "not entered" — preserve that as MISSING.
+    engagementPosition: q(site.horizontalSpanM - site.brakeZoneLengthM, 'length'),
+    availableStroke: q(scenario.brake.availableStrokeM, 'length'),
+    // A capacity of 0 in v1 means "not entered" — preserved as MISSING (Rule 3).
     forceCapacity:
       scenario.brake.brakeCapacityN > 0
-        ? q(scenario.brake.brakeCapacityN, 'N')
-        : missing('N', 'Brake hardware capacity not entered; capacity check not evaluated.'),
+        ? q(scenario.brake.brakeCapacityN, 'force')
+        : missing('force', 'Brake hardware capacity not entered; capacity check not evaluated.'),
+    energyCapacity: missing('energy', 'Brake energy capacity not supplied; required by M10.'),
   };
 
-  const elements: Element[] = [backstay, mainLine, trolleyMass, brake];
+  // ── ballast anchors as support elements ────────────────────────────────
+  const anchorWeightN = scenario.anchors.blocksPerAnchor * scenario.anchors.blockMassKg * GRAVITY;
+
+  const launchAnchorBallast: SupportElementDef = {
+    id: CUFTS_IDS.launchAnchorElement,
+    name: 'Launch-anchor ballast cluster',
+    type: 'supportElement',
+    nodeIds: [CUFTS_IDS.launchAnchorNode],
+    deadWeight: q(anchorWeightN, 'force', 'Block weight requires field verification.'),
+    frictionCoefficient: q(
+      scenario.anchors.groundFrictionCoefficient,
+      'dimensionless',
+      'Requires geotechnical assessment or field test.',
+    ),
+    lateralCapacity: missing('force', 'Rated lateral capacity not supplied; friction is used instead.'),
+    upliftCapacity: missing('force', 'No soil or helical anchors credited; dead weight only.'),
+  };
+
+  const brakeAnchorBallast: SupportElementDef = {
+    ...launchAnchorBallast,
+    id: CUFTS_IDS.brakeAnchorElement,
+    name: 'Brake-anchor ballast cluster',
+    nodeIds: [CUFTS_IDS.capturePointNode],
+  };
+
+  const elements: Element[] = [
+    backstay,
+    mainLine,
+    trolleyMass,
+    brake,
+    launchAnchorBallast,
+    brakeAnchorBallast,
+  ];
 
   // ── supports ───────────────────────────────────────────────────────────
   const supports: Support[] = [
     {
       id: 'sup-launch-anchor',
-      name: 'Launch anchor (ballast)',
+      name: 'Launch anchor',
       nodeId: CUFTS_IDS.launchAnchorNode,
       kind: 'fixed',
       restrained: { x: true, y: true, z: true },
+      csId: GLOBAL_CS_ID,
       notes: 'Ballast-block anchor; sliding/uplift capacity checked by the anchor solver.',
     },
     {
       id: 'sup-capture-point',
-      name: 'Brake anchor (ballast)',
+      name: 'Brake anchor',
       nodeId: CUFTS_IDS.capturePointNode,
       kind: 'fixed',
       restrained: { x: true, y: true, z: true },
+      csId: GLOBAL_CS_ID,
       notes: 'Ballast-block anchor at the capture terminus.',
     },
     {
@@ -254,8 +335,9 @@ export function buildCuftsProject(
       nodeId: CUFTS_IDS.masterNode,
       kind: 'prescribed',
       restrained: { x: false, y: false, z: true },
+      csId: GLOBAL_CS_ID,
       prescribedDisplacement: {
-        z: q(scenario.crane.hookHeightM, 'm', 'Crane hook height; support motion modeled in M8.'),
+        z: q(scenario.crane.hookHeightM, 'length', 'Crane hook height; support motion modeled in M11.'),
       },
       notes: 'Crane-supported master node; hook load compared against user-entered capacity.',
     },
@@ -269,41 +351,43 @@ export function buildCuftsProject(
       kind: 'nodeOnPath',
       nodeIds: [CUFTS_IDS.trolleyNode],
       pathElementId: CUFTS_IDS.mainLineElement,
-      pathParameter: q(scenario.dynamics.releasePositionFrac, '1'),
+      pathParameter: q(scenario.dynamics.releasePositionFrac, 'dimensionless'),
     },
   ];
 
-  // ── loads and load cases ───────────────────────────────────────────────
+  // ── loads, load cases, combinations ────────────────────────────────────
   const loads: Load[] = [
     {
       id: CUFTS_IDS.gravityLoad,
       name: 'Gravity',
       kind: 'gravity',
-      components: { z: provisional(-GRAVITY, 'm/s^2', 'Standard gravity.') },
+      csId: GLOBAL_CS_ID,
+      components: { z: provisional(-GRAVITY, 'acceleration', 'Standard gravity.') },
     },
     {
       id: CUFTS_IDS.pretensionLoad,
       name: 'Cable pretension',
       kind: 'pretension',
       elementId: CUFTS_IDS.mainLineElement,
-      magnitude: q(scenario.cable.pretensionN, 'N'),
+      magnitude: q(scenario.cable.pretensionN, 'force'),
     },
     {
       id: CUFTS_IDS.windLoad,
       name: 'Wind',
       kind: 'wind',
+      csId: GLOBAL_CS_ID,
       components: {
-        x: q(scenario.environment.alongTrackWindMps, 'm/s', 'Along-track component (+ tailwind).'),
-        y: q(scenario.environment.steadyCrosswindMps, 'm/s', 'Steady crosswind.'),
+        x: q(scenario.environment.alongTrackWindMps, 'velocity', 'Along-track (+ tailwind).'),
+        y: q(scenario.environment.steadyCrosswindMps, 'velocity', 'Steady crosswind.'),
       },
-      magnitude: q(scenario.environment.gustMps, 'm/s', 'Gust speed.'),
+      magnitude: q(scenario.environment.gustMps, 'velocity', 'Gust speed.'),
     },
     {
       id: CUFTS_IDS.brakeLoad,
       name: 'Brake force',
       kind: 'brakeForce',
       elementId: CUFTS_IDS.brakeElement,
-      magnitude: q(scenario.brake.brakeForceN, 'N'),
+      magnitude: q(scenario.brake.brakeForceN, 'force'),
     },
   ];
 
@@ -311,6 +395,7 @@ export function buildCuftsProject(
     {
       id: CUFTS_IDS.staticCase,
       name: 'Static — self weight + pretension + trolley',
+      kind: 'trolleyAtPosition',
       description: 'Static equilibrium with the trolley swept along the main span.',
       factors: [
         { loadId: CUFTS_IDS.gravityLoad, factor: 1 },
@@ -320,6 +405,7 @@ export function buildCuftsProject(
     {
       id: CUFTS_IDS.dynamicCase,
       name: 'Dynamic run — gravity, drag, wind, braking',
+      kind: 'normalOperation',
       description: 'Time-domain descent from release through brake engagement.',
       factors: [
         { loadId: CUFTS_IDS.gravityLoad, factor: 1 },
@@ -330,24 +416,49 @@ export function buildCuftsProject(
     },
   ];
 
+  /** Unfactored service combination — no code combination is assumed (Rule: M12). */
+  const loadCombinations: LoadCombination[] = [
+    {
+      id: CUFTS_IDS.serviceCombination,
+      name: 'Service (unfactored)',
+      terms: [
+        { loadCaseId: CUFTS_IDS.staticCase, factor: 1 },
+        { loadCaseId: CUFTS_IDS.dynamicCase, factor: 1 },
+      ],
+      notes:
+        'Unfactored service combination. No building-code combination is applied unless the ' +
+        'user explicitly selects a standard and revision.',
+    },
+  ];
+
   // ── moving body ────────────────────────────────────────────────────────
   const movingBodies: MovingBody[] = [
     {
       id: CUFTS_IDS.trolleyBody,
       name: 'Instrumented trolley',
       pathElementId: CUFTS_IDS.mainLineElement,
-      mass: q(totalMovingMass, 'kg'),
-      wheelRotaryInertia: missing('kg*m^2', 'Not supplied; M8 effective-mass formulation requires it.'),
-      wheelRadius: missing('m', 'Not supplied by the v1 scenario.'),
-      rollingResistance: q(scenario.trolley.rollingResistanceCoeff, '1', 'Requires rolldown or field test.'),
-      dragArea: q(scenario.trolley.dragAreaM2, 'm^2', 'Requires wind-tunnel or field test.'),
-      payloadMass: q(scenario.trolley.testArticleMassKg, 'kg'),
-      payloadDrop: q(scenario.trolley.payloadDropM, 'm'),
-      payloadDamping: missing('1', 'Payload pendulum damping not supplied; required by M8.'),
+      mass: q(totalMovingMass, 'mass'),
+      wheelRotaryInertia: missing(
+        'rotaryInertia',
+        'Not supplied; the M9 effective-mass formulation requires it.',
+      ),
+      wheelRadius: missing('length', 'Not supplied by the v1 scenario.'),
+      wheelCount: missing('dimensionless', 'Not supplied by the v1 scenario.'),
+      rollingResistance: q(
+        scenario.trolley.rollingResistanceCoeff,
+        'dimensionless',
+        'Requires rolldown or field test.',
+      ),
+      bearingResistance: missing('dimensionless', 'Bearing drag not separated in the v1 model.'),
+      dragArea: q(scenario.trolley.dragAreaM2, 'area', 'Requires wind-tunnel or field test.'),
+      payloadMass: q(scenario.trolley.testArticleMassKg, 'mass'),
+      payloadDrop: q(scenario.trolley.payloadDropM, 'length'),
+      payloadDamping: missing('dimensionless', 'Payload pendulum damping not supplied; M9.'),
       structuralRating:
         scenario.trolley.trolleyStructuralRatingN > 0
-          ? q(scenario.trolley.trolleyStructuralRatingN, 'N')
-          : missing('N', 'Trolley structural rating not entered; check not evaluated.'),
+          ? q(scenario.trolley.trolleyStructuralRatingN, 'force')
+          : missing('force', 'Trolley structural rating not entered; check not evaluated.'),
+      maxSpeed: q(scenario.trolley.maxAllowableSpeedMps, 'velocity'),
     },
   ];
 
@@ -357,7 +468,9 @@ export function buildCuftsProject(
       id: CUFTS_IDS.staticAnalysis,
       name: 'Static sweep (parabolic)',
       kind: 'staticSweep',
-      solverId: 'parabolic-v1',
+      solverId: PARABOLIC_STATIC_V1.id,
+      solverVersion: PARABOLIC_STATIC_V1.version,
+      fidelity: PARABOLIC_STATIC_V1.fidelity,
       loadCaseId: CUFTS_IDS.staticCase,
       movingBodyId: CUFTS_IDS.trolleyBody,
       settings: { sweepPositions: 21 },
@@ -367,7 +480,9 @@ export function buildCuftsProject(
       id: CUFTS_IDS.dynamicAnalysis,
       name: 'Dynamic run (RK4)',
       kind: 'dynamicRun',
-      solverId: 'rk4-trolley-v1',
+      solverId: RK4_TROLLEY_V1.id,
+      solverVersion: RK4_TROLLEY_V1.version,
+      fidelity: RK4_TROLLEY_V1.fidelity,
       loadCaseId: CUFTS_IDS.dynamicCase,
       movingBodyId: CUFTS_IDS.trolleyBody,
       settings: {
@@ -380,6 +495,39 @@ export function buildCuftsProject(
     },
   ];
 
+  // ── assumptions carried from the v1 solvers ────────────────────────────
+  const assumptions: AssumptionEntry[] = [
+    {
+      id: 'asm-parabolic',
+      statement:
+        'Cable statics use the parabolic approximation with horizontal tension fixed at the ' +
+        'unloaded pretension; elastic elongation is neglected.',
+      state: 'provisional',
+      resolutionPath: 'Select the M8 elastic-catenary or segmented nonlinear solver.',
+    },
+    {
+      id: 'asm-point-mass',
+      statement:
+        'The trolley is a point mass; wheel rotary inertia and payload pendulum motion are ' +
+        'not modeled.',
+      state: 'provisional',
+      resolutionPath: 'Supply wheel inertia and payload damping, then run the M9 solver.',
+    },
+    {
+      id: 'asm-brake-idealized',
+      statement: 'Brake response follows an idealized law rather than a measured hardware curve.',
+      state: 'provisional',
+      resolutionPath: 'Import a measured force curve in M10.',
+    },
+    {
+      id: 'asm-planar',
+      statement:
+        'The model is planar: lateral cable motion and out-of-plane loading are not modeled.',
+      state: 'provisional',
+      resolutionPath: 'Run the M11 lateral/out-of-plane dynamics model.',
+    },
+  ];
+
   // ── verification metadata ──────────────────────────────────────────────
   const trackedQuantities: Quantity[] = [
     cableCommon.minBreakingStrength,
@@ -389,6 +537,7 @@ export function buildCuftsProject(
     movingBodies[0].structuralRating!,
     movingBodies[0].rollingResistance!,
     movingBodies[0].dragArea!,
+    launchAnchorBallast.deadWeight!,
   ];
 
   const outstanding: string[] = [
@@ -406,8 +555,11 @@ export function buildCuftsProject(
   const verification: VerificationMetadata = {
     overallState: worstState(trackedQuantities),
     outstanding,
+    reviewStatus: 'draft',
     engineerReviewed: false,
   };
+
+  const templateInfo = getTemplateInfo('cufts')!;
 
   return {
     schemaVersion: PROJECT_SCHEMA_VERSION,
@@ -418,16 +570,18 @@ export function buildCuftsProject(
       'instrumented downhill trolley, progressive ground braking.',
     createdOn: options.createdOn ?? new Date().toISOString(),
     revision: options.revision ?? '1',
+    identity: {
+      testProgram: 'CUFTS',
+      notes: 'Identity fields are user-supplied; none are inferred by the software.',
+    },
     template: {
       id: 'cufts',
-      name: 'CUFTS — Captive UAS Final-Approach Test System',
-      description:
-        'Built-in template preserving the v1 TALON configuration: two-leg cable ' +
-        'system on a crane-supported master node with a braked downhill trolley.',
+      name: templateInfo.name,
+      description: templateInfo.description,
       dataVersion: scenario.schemaVersion,
     },
     templateData: { cufts: scenario },
-    coordinateSystems: [globalCoordinateSystem()],
+    coordinateSystems,
     nodes,
     materials,
     components: [],
@@ -436,16 +590,28 @@ export function buildCuftsProject(
     constraints,
     loads,
     loadCases,
+    loadCombinations,
     movingBodies,
     analysisCases,
-    results: [],
+    analysisRuns: [],
+    risks: [],
+    assumptions,
+    testData: [],
+    reports: [],
+    bom: [],
+    revisions: [
+      {
+        revision: options.revision ?? '1',
+        changedOn: options.createdOn ?? new Date().toISOString(),
+        summary: 'Project created from the CUFTS fixture template.',
+      },
+    ],
     verification,
   };
 }
 
 /**
- * Adapter: recovers the CUFTS `Scenario` that the v1 solvers consume.
- *
+ * Adapter: recovers the CUFTS `Scenario` the v1 solvers consume.
  * Returns the scenario stored by the template, so results are bit-identical
  * to running the solver on the original scenario object.
  */
@@ -464,3 +630,6 @@ export function extractScenario(project: Project): Scenario {
 export function isCuftsProject(project: Project): boolean {
   return project.template.id === 'cufts' && project.templateData.cufts !== undefined;
 }
+
+// Register CUFTS as the first implemented fixture template.
+registerTemplateBuilder('cufts', buildCuftsProject);

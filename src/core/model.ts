@@ -1,34 +1,75 @@
 /**
  * Project model — Milestone 6.
  *
- * The `Project` aggregate is the reusable description of a cable-supported
- * test fixture, moving-trolley system, crane-supported fixture, or portable
- * test structure. It is pure data with no React and no solver logic (Rule 5),
- * and every engineering property carries provenance (Rules 2–3).
+ * The `Project` aggregate describes a mechanical or cable-supported test
+ * fixture independently of any single application. Pure data: no React
+ * (Rule 7), SI internally (Rule 8), every engineering property carrying
+ * provenance (Rules 3–5).
  *
- * Layering note: today the CUFTS solvers still consume the legacy `Scenario`
- * object, which the CUFTS template preserves inside `templateData`. That keeps
- * v1 results bit-identical (Rule: preserve existing functionality) while the
- * generalized topology is established alongside it. Later milestones move
- * solvers onto the generalized entities directly.
+ * Layering note: the v1 CUFTS solvers still consume the legacy `Scenario`,
+ * which the CUFTS template preserves in `templateData`. That keeps v1 results
+ * bit-identical while the generalized topology is established alongside.
+ * Later milestones move solvers onto the generalized entities directly.
  */
 
 import type { Scenario } from '../models/scenario';
-import type { CoordinateSystem, ModelNode } from './geometry';
+import type { CoordinateSystem, ModelNode } from './coordinates';
 import type { Element, Material } from './elements';
 import type { Quantity, VerificationState } from './provenance';
+import type { AnalysisRun } from './analysisRun';
+import type { FidelityLevel } from './solver';
+import type { FixtureTemplateId } from './templates/registry';
 
-// ── components (catalog references; the library itself lands in M9) ───────
+// ── identity ─────────────────────────────────────────────────────────────
+
+export interface ProjectIdentity {
+  projectNumber?: string;
+  customer?: string;
+  testProgram?: string;
+  engineer?: string;
+  organization?: string;
+  site?: string;
+  notes?: string;
+}
+
+// ── components (library lands in M7; this is the in-project reference) ────
 
 export type ComponentCategory =
+  | 'wireRope'
+  | 'syntheticRope'
   | 'cable'
-  | 'rigging'
-  | 'trolley'
+  | 'chain'
+  | 'shackle'
+  | 'masterLink'
+  | 'deltaRing'
+  | 'turnbuckle'
+  | 'loadCell'
+  | 'dynamometer'
+  | 'sheave'
+  | 'snatchBlock'
+  | 'pulley'
+  | 'bearing'
+  | 'wheel'
+  | 'trolleyFrame'
   | 'brake'
+  | 'hydraulicCylinder'
+  | 'accumulator'
+  | 'shockAbsorber'
+  | 'winch'
   | 'crane'
-  | 'anchor'
-  | 'structural'
-  | 'instrumentation';
+  | 'portableMast'
+  | 'ecologyBlock'
+  | 'ballast'
+  | 'groundAnchor'
+  | 'structuralSteel'
+  | 'aluminum'
+  | 'fastener'
+  | 'sensor'
+  | 'camera'
+  | 'encoder'
+  | 'dataAcquisition'
+  | 'controller'
+  | 'safetyDevice';
 
 export interface ComponentRef {
   id: string;
@@ -36,7 +77,8 @@ export interface ComponentRef {
   name: string;
   manufacturer?: string;
   model?: string;
-  /** Library revision this reference was taken from (M9). */
+  partNumber?: string;
+  /** Library revision this reference was taken from (M7). */
   libraryRevision?: string;
   /** Engineering properties, each provenance-carrying. */
   properties: Record<string, Quantity>;
@@ -45,7 +87,6 @@ export interface ComponentRef {
 
 // ── supports and constraints ─────────────────────────────────────────────
 
-/** Translational degrees of freedom; rotations arrive with frame elements. */
 export interface DofMask {
   x: boolean;
   y: boolean;
@@ -59,55 +100,79 @@ export interface Support {
   name?: string;
   nodeId: string;
   kind: SupportKind;
-  /** Which translations are restrained. */
   restrained: DofMask;
-  /** Spring stiffnesses per axis, N/m (kind = 'spring'). */
-  stiffness?: { x?: Quantity; y?: Quantity; z?: Quantity };
-  /** Prescribed displacement per axis, m (kind = 'prescribed'; support motion). */
-  prescribedDisplacement?: { x?: Quantity; y?: Quantity; z?: Quantity };
+  /** Frame the restraint directions are expressed in. */
+  csId?: string;
+  stiffness?: { x?: Quantity<'stiffness'>; y?: Quantity<'stiffness'>; z?: Quantity<'stiffness'> };
+  prescribedDisplacement?: {
+    x?: Quantity<'length'>;
+    y?: Quantity<'length'>;
+    z?: Quantity<'length'>;
+  };
   notes?: string;
 }
 
 export type ConstraintKind = 'equalDof' | 'nodeOnPath' | 'rigidOffset';
 
-/** Kinematic relation between nodes (distinct from a boundary condition). */
 export interface Constraint {
   id: string;
   name?: string;
   kind: ConstraintKind;
   nodeIds: string[];
-  /** Element defining the path for 'nodeOnPath'. */
   pathElementId?: string;
-  /** Normalized position along the path, 0..1, for 'nodeOnPath'. */
-  pathParameter?: Quantity;
+  /** Normalized position along the path, 0..1. */
+  pathParameter?: Quantity<'dimensionless'>;
   notes?: string;
 }
 
-// ── loads and load cases ─────────────────────────────────────────────────
+// ── loads, load cases, load combinations ─────────────────────────────────
 
 export type LoadKind =
   | 'pointForce'
   | 'gravity'
   | 'wind'
+  | 'gust'
   | 'thermal'
   | 'pretension'
   | 'prescribedDisplacement'
-  | 'brakeForce';
+  | 'brakeForce'
+  | 'impulse';
 
 export interface Load {
   id: string;
   name?: string;
   kind: LoadKind;
-  /** Node the load acts on (point loads). */
   nodeId?: string;
-  /** Element the load acts on (thermal, pretension, distributed). */
   elementId?: string;
-  /** Components in the global frame, N (or m for prescribed displacement). */
+  /** Frame the components are expressed in (Rule 6). */
+  csId?: string;
   components?: { x?: Quantity; y?: Quantity; z?: Quantity };
-  /** Scalar magnitude for kinds that need one (e.g. temperature delta, K). */
   magnitude?: Quantity;
   notes?: string;
 }
+
+/** Named operating conditions reused across projects (M12 expands the catalogue). */
+export type LoadCaseKind =
+  | 'dead'
+  | 'pretension'
+  | 'launch'
+  | 'trolleyAtPosition'
+  | 'normalOperation'
+  | 'brakeEntry'
+  | 'maximumBraking'
+  | 'emergencyStop'
+  | 'backupArrestor'
+  | 'steadyWind'
+  | 'gust'
+  | 'crosswind'
+  | 'supportMovement'
+  | 'anchorDegradation'
+  | 'componentFailure'
+  | 'craneLowering'
+  | 'setup'
+  | 'recovery'
+  | 'transportation'
+  | 'custom';
 
 export interface LoadCaseFactor {
   loadId: string;
@@ -117,132 +182,188 @@ export interface LoadCaseFactor {
 export interface LoadCase {
   id: string;
   name: string;
+  kind: LoadCaseKind;
   description?: string;
   factors: LoadCaseFactor[];
   notes?: string;
 }
 
-// ── moving bodies ────────────────────────────────────────────────────────
-
 /**
- * A body that travels along a path element (the trolley and its payload).
- * Wheel inertia and pendulum parameters are carried now so M8 can consume
- * them without a schema change.
+ * A user-defined combination of load cases.
+ *
+ * Building-code combinations are never hard-coded; `standard` is recorded only
+ * when the user explicitly selects a standard and revision.
  */
-export interface MovingBody {
+export interface LoadCombination {
   id: string;
   name: string;
-  /** Element the body travels along. */
-  pathElementId: string;
-  /** Total moving mass, kg. */
-  mass?: Quantity;
-  /** Rotary inertia of wheels about their axles, kg*m^2 (M8). */
-  wheelRotaryInertia?: Quantity;
-  /** Effective rolling radius, m (M8). */
-  wheelRadius?: Quantity;
-  /** Rolling-resistance coefficient, dimensionless. */
-  rollingResistance?: Quantity;
-  /** Aerodynamic drag area Cd*A, m^2. */
-  dragArea?: Quantity;
-  /** Suspended payload mass, kg (pendulum bob, M8). */
-  payloadMass?: Quantity;
-  /** Payload suspension length below the body, m. */
-  payloadDrop?: Quantity;
-  /** Payload pendulum damping ratio, dimensionless (M8). */
-  payloadDamping?: Quantity;
-  /** Structural force rating of the body, N. Missing => check not evaluated. */
-  structuralRating?: Quantity;
+  terms: { loadCaseId: string; factor: number }[];
+  /** Standard and revision, when the user selected one. Never assumed. */
+  standard?: { name: string; revision: string };
   notes?: string;
 }
 
-// ── analysis cases and results ───────────────────────────────────────────
+// ── moving bodies ────────────────────────────────────────────────────────
+
+export interface MovingBody {
+  id: string;
+  name: string;
+  pathElementId: string;
+  mass?: Quantity<'mass'>;
+  /** Wheel rotary inertia about the axle, kg·m² (M9). */
+  wheelRotaryInertia?: Quantity<'rotaryInertia'>;
+  wheelRadius?: Quantity<'length'>;
+  wheelCount?: Quantity<'dimensionless'>;
+  rollingResistance?: Quantity<'dimensionless'>;
+  bearingResistance?: Quantity<'dimensionless'>;
+  dragArea?: Quantity<'area'>;
+  payloadMass?: Quantity<'mass'>;
+  payloadDrop?: Quantity<'length'>;
+  payloadDamping?: Quantity<'dimensionless'>;
+  /** Structural force rating, N. Missing => check not evaluated. */
+  structuralRating?: Quantity<'force'>;
+  maxSpeed?: Quantity<'velocity'>;
+  notes?: string;
+}
+
+// ── analysis cases ───────────────────────────────────────────────────────
 
 export type AnalysisKind =
   | 'staticCable'
   | 'staticSweep'
   | 'dynamicRun'
   | 'nonlinearCable'
-  | 'coupledDynamics';
+  | 'coupledDynamics'
+  | 'sensitivity'
+  | 'optimization'
+  | 'externalExport';
 
-/** Solver identifier plus the settings that make a run reproducible (Rule 8). */
+/** Solver selection plus the settings that make a run reproducible (Rule 9). */
 export interface AnalysisCase {
   id: string;
   name: string;
   kind: AnalysisKind;
-  /** Which solver implementation to use, e.g. 'parabolic', 'catenary'. */
   solverId: string;
+  solverVersion: string;
+  /** Fidelity the user selected for this case. */
+  fidelity: FidelityLevel;
   loadCaseId?: string;
+  loadCombinationId?: string;
   movingBodyId?: string;
-  /** Solver settings (tolerances, step size, element counts, …). */
   settings: Record<string, number | string | boolean>;
   notes?: string;
 }
 
-export type ConvergenceStatus = 'converged' | 'not-converged' | 'not-applicable' | 'failed';
+// ── risks and assumptions ────────────────────────────────────────────────
 
-/**
- * Result envelope. Rule 4 requires solvers to expose assumptions, units,
- * intermediate values, residuals, convergence status, and applicability
- * limits — so those are structural fields, not optional commentary.
- */
-export interface SolverResult {
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type RiskStatus = 'open' | 'mitigated' | 'accepted' | 'closed';
+
+/** Hazard/FMEA entry. The full register arrives in M14. */
+export interface RiskEntry {
   id: string;
-  analysisCaseId: string;
-  solverId: string;
-  /** ISO-8601 timestamp of the run. */
-  ranOn: string;
-  convergence: ConvergenceStatus;
-  iterations?: number;
-  /** Residual norms keyed by kind, e.g. { force: 1e-9, length: 2e-8 }. */
-  residuals?: Record<string, number>;
-  /** Primary outputs, each provenance-carrying (state 'estimated' for computed). */
-  outputs: Record<string, Quantity>;
-  /** Intermediate values retained for traceability. */
-  intermediates?: Record<string, Quantity>;
-  assumptions: string[];
-  /** Conditions under which this result is valid. */
-  applicabilityLimits: string[];
-  warnings: string[];
-  /** Worst provenance across the inputs this result depended on. */
-  inputVerification: VerificationState;
+  subsystem?: string;
+  failureMode: string;
+  cause?: string;
+  systemEffect?: string;
+  severity: RiskSeverity;
+  status: RiskStatus;
+  mitigation?: string;
+  owner?: string;
+  evidence?: string;
+  /** True for seeded starter content requiring engineering review. */
+  starterContent: boolean;
 }
 
-// ── verification metadata ────────────────────────────────────────────────
+export interface AssumptionEntry {
+  id: string;
+  statement: string;
+  rationale?: string;
+  /** Verification state of the data or judgement behind the assumption. */
+  state: VerificationState;
+  /** What must happen to retire the assumption. */
+  resolutionPath?: string;
+}
+
+// ── test data and reports (M16 / reporting) ──────────────────────────────
+
+export interface TestDataRef {
+  id: string;
+  testNumber?: string;
+  testArticle?: string;
+  /** Original file name; raw data is never overwritten (M16). */
+  rawFileName?: string;
+  recordedOn?: string;
+  channelMap?: Record<string, string>;
+  notes?: string;
+}
+
+export interface ReportRef {
+  id: string;
+  title: string;
+  revision: string;
+  issuedOn?: string;
+  /** Analysis runs this report was built from. */
+  analysisRunIds: string[];
+  notes?: string;
+}
+
+// ── bill of materials (M13) ──────────────────────────────────────────────
+
+export interface BomLine {
+  itemNumber: string;
+  subsystem?: string;
+  category?: ComponentCategory;
+  quantity: number;
+  description: string;
+  componentId?: string;
+  /** Calculated demand this line must satisfy. */
+  requiredRating?: Quantity;
+  selectedRating?: Quantity;
+  designFactor?: Quantity<'dimensionless'>;
+  utilization?: Quantity<'dimensionless'>;
+  notes?: string;
+}
+
+// ── revision and review ──────────────────────────────────────────────────
+
+export interface RevisionEntry {
+  revision: string;
+  changedOn: string;
+  changedBy?: string;
+  summary: string;
+}
+
+export type ReviewStatus = 'draft' | 'inReview' | 'engineerReviewed' | 'superseded';
 
 export interface VerificationMetadata {
   /** Worst state across all project inputs — drives the headline data status. */
   overallState: VerificationState;
-  /** Human summary of what still requires verification. */
   outstanding: string[];
-  /** Set true only when a qualified engineer has signed the project off. */
+  reviewStatus: ReviewStatus;
+  /** Set only by a qualified person; never by the software (Rule 1). */
   engineerReviewed: boolean;
   reviewedBy?: string;
   reviewedOn?: string;
 }
 
-// ── templates ────────────────────────────────────────────────────────────
-
-export type TemplateId = 'cufts' | 'generic';
+// ── template payload ─────────────────────────────────────────────────────
 
 export interface TemplateInfo {
-  id: TemplateId;
+  id: FixtureTemplateId;
   name: string;
   description: string;
-  /** Schema version of the template-specific payload in `templateData`. */
   dataVersion: number;
 }
 
-/**
- * Template-specific payload. For CUFTS this holds the legacy `Scenario`, which
- * remains the authoritative input for the v1 solvers reached via the adapter.
- */
+/** Template-specific payload. CUFTS keeps the authoritative v1 `Scenario`. */
 export interface TemplateData {
   cufts?: Scenario;
 }
 
 // ── project aggregate ────────────────────────────────────────────────────
 
-export const PROJECT_SCHEMA_VERSION = 1;
+export const PROJECT_SCHEMA_VERSION = 2;
 
 export interface Project {
   /** Version of the PROJECT envelope (independent of the CUFTS Scenario version). */
@@ -250,9 +371,9 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
-  /** ISO-8601. */
   createdOn: string;
   revision: string;
+  identity: ProjectIdentity;
   template: TemplateInfo;
   templateData: TemplateData;
 
@@ -265,9 +386,17 @@ export interface Project {
   constraints: Constraint[];
   loads: Load[];
   loadCases: LoadCase[];
+  loadCombinations: LoadCombination[];
   movingBodies: MovingBody[];
   analysisCases: AnalysisCase[];
-  results: SolverResult[];
+  /** Frozen historical runs. */
+  analysisRuns: AnalysisRun[];
+  risks: RiskEntry[];
+  assumptions: AssumptionEntry[];
+  testData: TestDataRef[];
+  reports: ReportRef[];
+  bom: BomLine[];
+  revisions: RevisionEntry[];
   verification: VerificationMetadata;
 }
 
@@ -280,8 +409,8 @@ export interface IntegrityIssue {
 }
 
 /**
- * Checks that every cross-reference in the project resolves. Returns issues
- * rather than throwing so callers can surface them in the UI (Rule 4).
+ * Checks that every cross-reference resolves. Returns issues rather than
+ * throwing so callers can surface them in the UI (Rule 6).
  */
 export function checkProjectIntegrity(project: Project): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
@@ -290,6 +419,7 @@ export function checkProjectIntegrity(project: Project): IntegrityIssue[] {
   const elementIds = new Set(project.elements.map((e) => e.id));
   const materialIds = new Set(project.materials.map((m) => m.id));
   const loadIds = new Set(project.loads.map((l) => l.id));
+  const loadCaseIds = new Set(project.loadCases.map((l) => l.id));
   const componentIds = new Set(project.components.map((c) => c.id));
 
   const err = (entity: string, message: string) =>
@@ -297,6 +427,11 @@ export function checkProjectIntegrity(project: Project): IntegrityIssue[] {
 
   for (const node of project.nodes) {
     if (!csIds.has(node.csId)) err(`node:${node.id}`, `unknown coordinate system "${node.csId}"`);
+  }
+  for (const cs of project.coordinateSystems) {
+    if (cs.parentId && !csIds.has(cs.parentId)) {
+      err(`coordinateSystem:${cs.id}`, `unknown parent "${cs.parentId}"`);
+    }
   }
   for (const element of project.elements) {
     for (const nid of element.nodeIds) {
@@ -307,6 +442,9 @@ export function checkProjectIntegrity(project: Project): IntegrityIssue[] {
     }
     if (element.componentId && !componentIds.has(element.componentId)) {
       err(`element:${element.id}`, `unknown component "${element.componentId}"`);
+    }
+    if (element.csId && !csIds.has(element.csId)) {
+      err(`element:${element.id}`, `unknown coordinate system "${element.csId}"`);
     }
   }
   for (const support of project.supports) {
@@ -331,18 +469,40 @@ export function checkProjectIntegrity(project: Project): IntegrityIssue[] {
       if (!loadIds.has(f.loadId)) err(`loadCase:${lc.id}`, `unknown load "${f.loadId}"`);
     }
   }
+  for (const combo of project.loadCombinations) {
+    for (const t of combo.terms) {
+      if (!loadCaseIds.has(t.loadCaseId)) {
+        err(`loadCombination:${combo.id}`, `unknown load case "${t.loadCaseId}"`);
+      }
+    }
+  }
   for (const body of project.movingBodies) {
     if (!elementIds.has(body.pathElementId)) {
       err(`movingBody:${body.id}`, `unknown path element "${body.pathElementId}"`);
     }
   }
   for (const ac of project.analysisCases) {
-    if (ac.loadCaseId && !project.loadCases.some((l) => l.id === ac.loadCaseId)) {
+    if (ac.loadCaseId && !loadCaseIds.has(ac.loadCaseId)) {
       err(`analysisCase:${ac.id}`, `unknown load case "${ac.loadCaseId}"`);
     }
     if (ac.movingBodyId && !project.movingBodies.some((b) => b.id === ac.movingBodyId)) {
       err(`analysisCase:${ac.id}`, `unknown moving body "${ac.movingBodyId}"`);
     }
   }
+  for (const report of project.reports) {
+    for (const runId of report.analysisRunIds) {
+      if (!project.analysisRuns.some((r) => r.id === runId)) {
+        err(`report:${report.id}`, `unknown analysis run "${runId}"`);
+      }
+    }
+  }
   return issues;
+}
+
+/** Ids of risks that are critical and still open (feeds Rule 2 acceptance). */
+export function openCriticalRiskIds(project: Project): string[] {
+  return project.risks
+    .filter((r) => r.severity === 'critical' && (r.status === 'open' || r.status === 'mitigated'))
+    .filter((r) => r.status === 'open')
+    .map((r) => r.id);
 }

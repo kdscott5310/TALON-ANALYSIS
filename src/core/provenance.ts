@@ -1,122 +1,194 @@
 /**
- * Data provenance and quantities — Milestone 6.
+ * Data provenance and dimensional quantities — Milestone 6.
  *
- * Every engineering property in the generalized model carries a value AND
- * the story of where that value came from. Two platform rules are enforced
- * structurally here:
+ * Every engineering property carries a value AND the story of where it came
+ * from. Governance rules enforced structurally here:
  *
- *   Rule 2 — A missing rating is NEVER silently substituted with zero or an
- *            assumed safe value. `value: null` + state `'missing'` is a
- *            first-class state that propagates into results.
- *   Rule 3 — Verified, provisional, estimated, example, and missing data are
- *            distinguishable at every point of use.
+ *   Rule 3 — A missing value is NEVER silently replaced with zero. `value:
+ *            null` with state `'missing'` is first-class and propagates.
+ *   Rule 4 — Example / estimated / imported-unverified data can never be read
+ *            as verified; `isVerified()` is the only gate.
+ *   Rule 5 — The original published value is preserved in `sourceValue`,
+ *            separately from any engineering derating applied to `value`.
+ *   Rule 6 — Units and dimension travel with the value.
  *
- * All values are SI. The `unit` field documents which SI unit, so results and
- * exports can state units without guessing (Rule 4).
+ * The full component-library provenance (attachments, page citations, duty
+ * cycles) is Milestone 7; the fields here are its forward-compatible core.
  */
+
+import { SI_UNIT, type Dimension } from './dimensions';
 
 /**
- * How much trust a value carries.
+ * Verification state of an engineering property.
  *
- *  verified    — confirmed against a manufacturer certificate, test report,
- *                standard, or field measurement, with a cited source.
- *  provisional — a working value chosen by the engineer, pending verification.
- *  estimated   — derived/inferred (e.g. from geometry or a correlation).
- *  example     — illustrative placeholder shipped with the app or a template.
- *                NEVER acceptable as a basis for a physical test.
- *  missing     — not supplied. Dependent checks report "insufficient
- *                information"; they must not pass, fail, or assume a value.
+ *  manufacturerVerified — confirmed against the manufacturer's current document
+ *  userVerified         — confirmed by the user against a cited source
+ *  internallyTested     — measured by the organization's own test
+ *  supplierListed       — from a distributor/supplier summary, not the maker
+ *  provisional          — working value chosen by the engineer, pending check
+ *  estimated            — derived or inferred (geometry, correlation)
+ *  exampleOnly          — illustrative placeholder shipped with the software
+ *  importedUnverified   — pulled from an online/imported source, unchecked
+ *  obsolete             — superseded; retained for history, not for design
+ *  missing              — not supplied; dependent checks report insufficient info
  */
-export type VerificationState = 'verified' | 'provisional' | 'estimated' | 'example' | 'missing';
+export type VerificationState =
+  | 'manufacturerVerified'
+  | 'userVerified'
+  | 'internallyTested'
+  | 'supplierListed'
+  | 'provisional'
+  | 'estimated'
+  | 'exampleOnly'
+  | 'importedUnverified'
+  | 'obsolete'
+  | 'missing';
 
-/** Ranked worst → best for aggregation. */
+/** Ranked worst → best, used for aggregation. */
 const STATE_RANK: Record<VerificationState, number> = {
   missing: 0,
-  example: 1,
-  estimated: 2,
-  provisional: 3,
-  verified: 4,
+  obsolete: 1,
+  exampleOnly: 2,
+  importedUnverified: 3,
+  estimated: 4,
+  provisional: 5,
+  supplierListed: 6,
+  internallyTested: 7,
+  userVerified: 8,
+  manufacturerVerified: 9,
 };
+
+/**
+ * The only states that count as verified for design decisions.
+ * A supplier listing is deliberately NOT verified (Rule 12: distributor
+ * summaries and search results are not engineering proof).
+ */
+const VERIFIED_STATES: ReadonlySet<VerificationState> = new Set<VerificationState>([
+  'manufacturerVerified',
+  'userVerified',
+  'internallyTested',
+]);
+
+export function isVerified(state: VerificationState): boolean {
+  return VERIFIED_STATES.has(state);
+}
 
 export type Confidence = 'low' | 'medium' | 'high';
 
+/** Where a value came from and how much it can be trusted. */
 export interface Provenance {
   state: VerificationState;
-  /** Where the value came from: manufacturer cert, standard, test report, … */
-  source?: string;
-  /** Document/model identifier and revision, e.g. "AcmeRope DS-12 rev C". */
-  reference?: string;
-  /** ISO-8601 date the value was recorded or verified. */
-  recordedOn?: string;
+  /** Kind of source: 'manufacturerDocument', 'test', 'calculation', … */
+  sourceType?: string;
+  /** Document title or description. */
+  sourceDocument?: string;
+  /** URL, when retrieved online. Preserved with `retrievedOn` (Rule 12). */
+  sourceUrl?: string;
+  /** Page, table, or section supporting the value. */
+  sourceLocation?: string;
+  manufacturer?: string;
+  model?: string;
+  partNumber?: string;
+  /** Document revision. */
+  revision?: string;
+  /** ISO-8601 publication date of the source document. */
+  publishedOn?: string;
+  /** ISO-8601 date the value was retrieved (online sources). */
+  retrievedOn?: string;
+  enteredBy?: string;
   verifiedBy?: string;
+  /** ISO-8601 date of verification. */
+  verifiedOn?: string;
   confidence?: Confidence;
-  /** Derating already applied to `value`, as a fraction (0.8 = 80% of rated). */
+  /** Human description of the derating applied, e.g. "0.8 for side loading". */
+  deratingRule?: string;
+  /** Factor applied to `sourceValue` to obtain `value`. */
   deratingFactor?: number;
   notes?: string;
 }
 
-/** SI unit tags used by the model. Display conversion happens at the UI edge. */
-export type SiUnit =
-  | 'm'
-  | 'm^2'
-  | 'm^3'
-  | 'kg'
-  | 'kg/m'
-  | 'kg/m^3'
-  | 'kg*m^2'
-  | 'N'
-  | 'N/m'
-  | 'N*s/m'
-  | 'N*m'
-  | 'Pa'
-  | 's'
-  | 'm/s'
-  | 'm/s^2'
-  | 'rad'
-  | 'K'
-  | 'degC'
-  | '1/K'
-  | 'J'
-  | 'W'
-  | '1'; // dimensionless
-
 /**
- * A physical quantity in SI with provenance.
+ * A physical quantity in SI, tagged with its dimension and provenance.
+ *
+ * `value` is the working (possibly derated) value solvers consume.
+ * `sourceValue` is the original published figure, preserved separately (Rule 5).
  * `value === null` means MISSING — never treat it as 0.
  */
-export interface Quantity {
+export interface Quantity<D extends Dimension = Dimension> {
   value: number | null;
-  unit: SiUnit;
+  dimension: D;
+  /** SI unit label, derived from the dimension. */
+  unit: string;
+  /** Original value before derating, SI. Absent when no derating was applied. */
+  sourceValue?: number | null;
   provenance: Provenance;
 }
 
 // ── constructors ─────────────────────────────────────────────────────────
 
-export function quantity(
+export function quantity<D extends Dimension>(
   value: number,
-  unit: SiUnit,
+  dimension: D,
   state: VerificationState,
   extra: Omit<Provenance, 'state'> = {},
-): Quantity {
-  return { value, unit, provenance: { state, ...extra } };
+): Quantity<D> {
+  return { value, dimension, unit: SI_UNIT[dimension], provenance: { state, ...extra } };
 }
 
 /** An explicitly missing quantity. Dependent checks must report insufficient info. */
-export function missing(unit: SiUnit, notes?: string): Quantity {
-  return { value: null, unit, provenance: { state: 'missing', notes } };
+export function missing<D extends Dimension>(dimension: D, notes?: string): Quantity<D> {
+  return {
+    value: null,
+    dimension,
+    unit: SI_UNIT[dimension],
+    provenance: { state: 'missing', notes },
+  };
 }
 
-/** Illustrative placeholder shipped with a template — never test-authorizing. */
-export function exampleValue(value: number, unit: SiUnit, notes?: string): Quantity {
-  return { value, unit, provenance: { state: 'example', notes } };
+/** Illustrative placeholder shipped with the software — never test-authorizing. */
+export function exampleValue<D extends Dimension>(
+  value: number,
+  dimension: D,
+  notes?: string,
+): Quantity<D> {
+  return quantity(value, dimension, 'exampleOnly', { notes });
 }
 
-export function provisional(value: number, unit: SiUnit, notes?: string): Quantity {
-  return { value, unit, provenance: { state: 'provisional', notes } };
+export function provisional<D extends Dimension>(
+  value: number,
+  dimension: D,
+  notes?: string,
+): Quantity<D> {
+  return quantity(value, dimension, 'provisional', { notes });
 }
 
-export function estimated(value: number, unit: SiUnit, notes?: string): Quantity {
-  return { value, unit, provenance: { state: 'estimated', notes } };
+export function estimated<D extends Dimension>(
+  value: number,
+  dimension: D,
+  notes?: string,
+): Quantity<D> {
+  return quantity(value, dimension, 'estimated', { notes });
+}
+
+/**
+ * Applies a derating factor, preserving the original source value (Rule 5).
+ * The returned quantity keeps the source provenance and records the rule.
+ */
+export function derate<D extends Dimension>(
+  q: Quantity<D>,
+  factor: number,
+  rule: string,
+): Quantity<D> {
+  if (!(factor > 0) || !Number.isFinite(factor)) {
+    throw new Error(`Derating factor must be a positive finite number (got ${factor}).`);
+  }
+  const original = q.sourceValue ?? q.value;
+  return {
+    ...q,
+    value: q.value === null ? null : q.value * factor,
+    sourceValue: original,
+    provenance: { ...q.provenance, deratingFactor: factor, deratingRule: rule },
+  };
 }
 
 // ── accessors ────────────────────────────────────────────────────────────
@@ -126,9 +198,9 @@ export function isMissing(q: Quantity | undefined | null): boolean {
 }
 
 /**
- * Reads a quantity that a calculation requires.
- * Returns null when missing — callers MUST branch on null and report
- * "insufficient information" rather than substituting a value (Rule 2).
+ * Reads a quantity a calculation requires. Returns null when missing —
+ * callers MUST branch and report "insufficient information" rather than
+ * substituting a value (Rule 3).
  */
 export function valueOrNull(q: Quantity | undefined | null): number | null {
   if (isMissing(q)) return null;
@@ -136,16 +208,16 @@ export function valueOrNull(q: Quantity | undefined | null): number | null {
 }
 
 /**
- * Reads a required quantity, throwing when missing.
- * Use only where the caller has already verified presence; prefer
- * `valueOrNull` and an explicit insufficient-information result.
+ * Reads a required quantity, throwing when missing. Use only where presence
+ * has already been established; prefer `valueOrNull` plus an explicit
+ * insufficient-information result.
  */
 export function requireValue(q: Quantity | undefined | null, label: string): number {
   const v = valueOrNull(q);
   if (v === null) {
     throw new Error(
       `Required quantity "${label}" is missing. It must be supplied by the user — ` +
-        'it is never defaulted (platform Rule 2).',
+        'it is never defaulted (governance Rule 3).',
     );
   }
   return v;
@@ -153,7 +225,7 @@ export function requireValue(q: Quantity | undefined | null, label: string): num
 
 /** Worst (least trustworthy) state across the given quantities. */
 export function worstState(quantities: (Quantity | undefined | null)[]): VerificationState {
-  let worst: VerificationState = 'verified';
+  let worst: VerificationState = 'manufacturerVerified';
   for (const q of quantities) {
     const s: VerificationState = !q ? 'missing' : q.provenance.state;
     if (STATE_RANK[s] < STATE_RANK[worst]) worst = s;
@@ -162,18 +234,34 @@ export function worstState(quantities: (Quantity | undefined | null)[]): Verific
 }
 
 /**
- * True when a set of quantities is fit to support a physical test decision:
- * every value present and verified. Everything else requires review.
+ * True only when every quantity is present AND verified. Anything else
+ * requires engineering review before it can support a physical test.
  */
-export function isTestAuthorizing(quantities: (Quantity | undefined | null)[]): boolean {
-  return worstState(quantities) === 'verified';
+export function allVerified(quantities: (Quantity | undefined | null)[]): boolean {
+  return quantities.every((q) => !!q && !isMissing(q) && isVerified(q.provenance.state));
 }
 
-/** Human-readable state label for UI and reports. */
+/** Mixed-confidence summary for the result badge (Rule 6). */
+export type InputConfidence = 'verified' | 'mixed' | 'unverified' | 'insufficient';
+
+export function summarizeConfidence(quantities: (Quantity | undefined | null)[]): InputConfidence {
+  if (quantities.length === 0) return 'insufficient';
+  if (quantities.some((q) => isMissing(q))) return 'insufficient';
+  if (allVerified(quantities)) return 'verified';
+  const anyVerified = quantities.some((q) => !!q && isVerified(q.provenance.state));
+  return anyVerified ? 'mixed' : 'unverified';
+}
+
+/** Human-readable labels for UI and reports. */
 export const STATE_LABEL: Record<VerificationState, string> = {
-  verified: 'Verified',
+  manufacturerVerified: 'Manufacturer verified',
+  userVerified: 'User verified',
+  internallyTested: 'Internally tested',
+  supplierListed: 'Supplier listed (unverified)',
   provisional: 'Provisional',
   estimated: 'Estimated',
-  example: 'EXAMPLE — not for use',
+  exampleOnly: 'EXAMPLE ONLY — not for use',
+  importedUnverified: 'Imported — UNVERIFIED',
+  obsolete: 'OBSOLETE — superseded',
   missing: 'NOT ENTERED',
 };
