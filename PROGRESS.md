@@ -20,8 +20,8 @@ criteria.
 | M11 | Lateral / out-of-plane cable dynamics | ✅ **COMPLETE** | `milestone-11-lateral-cable` | 273 |
 | M12 | Load combos, uncertainty, optimization | ✅ **COMPLETE** | `milestone-12-uncertainty-optim` | 286 |
 | M13 | Component sizing, BOM, procurement | ✅ **COMPLETE** | `milestone-13-sizing-bom` | 297 |
-| M14 | FMEA, hazards, review records | 🔄 in progress | `milestone-14-fmea` | — |
-| M15 | 3D + customer/operator visualization | ⬜ not started | — | — |
+| M14 | FMEA, hazards, review records | ✅ **COMPLETE** | `milestone-14-fmea` | 307 |
+| M15 | 3D + customer/operator visualization | 🔄 in progress | `milestone-15-visualization` | — |
 | M16 | Digital twin & test correlation | ⬜ not started | — | — |
 | M17 | Truss/frame groundwork, external FEA | ⬜ not started | — | — |
 
@@ -144,6 +144,18 @@ combinations with no assumed code factors. **Not done:** Monte Carlo sampling
 - 15 tests covering rating math, deratings, ranking, exclusions, missing-rating, BOM, and search-sheet honesty
 
 **Not done:** UI for the BOM/procurement panels and cost roll-up — deferred with other UI work.
+
+## M14 — FMEA & hazard register ✅
+
+**Branch:** `milestone-14-fmea` · **Tests:** 307 · **Build:** clean
+
+- `core/fmea.ts` — FMEA entries (S/O/D, RPN, mitigation, owner, evidence, closure status); criticality banding where a catastrophic-severity mode is never downgraded below high regardless of RPN; open critical/high risks propagate to feed the acceptance decision (Rule 2)
+- 25 seeded starter failure modes (cable rupture, brake failure, anchor sliding, crane side load, derailment, overspeed, zone intrusion, invalid hardware data, solver non-convergence, …), every one labeled `starterContent` and open
+- 12 tests: RPN math, criticality banding + severity override, open-risk propagation, status transitions, priority ordering, and the seed-labeling guarantee
+
+**Not done:** UI hazard-register panel and wiring open-critical risks into the
+live report/status badge (the engine exposes `openCriticalOrHighRisks` ready
+for that binding). Deferred with other UI work.
 
 ## Known carry-forward items
 

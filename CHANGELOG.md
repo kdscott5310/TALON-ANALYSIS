@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased — Milestone 14: FMEA and hazard register
+- Added `src/core/fmea.ts`: a failure-mode-and-effects register with severity/occurrence/detection ratings, RPN = S×O×D, mitigations, owners, evidence, and closure status. Criticality banding never downgrades a catastrophic-severity (S ≥ 9–10) mode below "high" regardless of RPN, so a rare-but-catastrophic failure always surfaces in the report.
+- Open critical/high risks propagate: `openCriticalOrHighRisks` and `summarizeFmea` expose whether an unresolved high-consequence hazard exists, feeding the Rule-2 acceptance decision (a result is never acceptable while such a risk is open).
+- Seeded 25 representative starter failure modes across main line, rigging, anchors, crane, trolley, payload, brake, controls, recovery, instrumentation, data, analysis, environment, and safety — every entry labeled `starterContent` and left open for engineering review (a test asserts none is presented as complete).
+- Added 12 tests (`src/tests/fmea.test.ts`): RPN math, criticality banding with severity override, open-risk propagation and status transitions, priority ordering, summary counts, and the seed-labeling guarantee.
+- Total test count: 307 (297 + 10). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** the UI hazard-register panel and wiring open-critical risks into the live report/status badge (the engine is ready for that binding).
+
 ## Unreleased — Milestone 13: Component sizing, BOM, and procurement
 - Added `src/calculations/componentSizing.ts`: maps a calculated demand to a required rating (demand × design factor), applies project deratings to the published rating (kept separate from the demand, Rule 5), and matches against the component library. It ranks **all** candidates by margin — never auto-selecting the smallest passing part — and returns each with utilization, controlling criterion, verification status, and a pass/fail/excluded reason. Obsolete and unverified parts are excluded when verified data is required (Rule 4); a missing rating is reported as insufficient information, never treated as adequate (Rule 3).
 - Added `src/reports/procurementSheet.ts`: generates search phrases, RFQ text, and a CSV that clearly distinguishes the calculated requirement, recommended minimum, and any selected/verified component, and marks demands with no passing candidate as PROCUREMENT REQUIRED rather than inventing a part.
