@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Unreleased — Milestone 16: Digital twin / measured-data correlation
+- Added `src/calculations/testCorrelation.ts`: imports measured test channels and correlates the model against them. Raw samples are never mutated — conditioning (scale, polarity, zero correction) and moving-average filtering each return a new array and the original is retained (Rule: preserve raw).
+- Correlation reports RMSE, peak error, peak-value error, a timing error found by best constant time-shift alignment, an integral/energy error, R², and the full residual signal.
+- Parameter estimation minimizes correlation RMSE (coordinate descent + golden section), recovers known parameters from synthetic data, and raises an identifiability warning when a parameter barely affects the residual (so an unconstrained estimate is never trusted). Calibration remains preliminary and never certifies a result.
+- Added 12 tests (`src/tests/testCorrelation.test.ts`): raw-data preservation, metric correctness on identical/shifted/scaled signals, known-offset recovery, known-slope recovery, the identifiability flag, and determinism.
+- Total test count: 317 (307 + 10). Build clean; audit unchanged (dev-only, R-0).
+- **Milestone 15 (3D + customer/operator visualization) is not started** — it requires Three.js/React Three Fiber and a live browser session to build and verify, so it is deferred rather than stubbed. All solver outputs it will consume are ready.
+- **Deferred (honestly):** UI overlay/residual plots and persisted calibrated-scenario copies (marked derived-from-test).
+
 ## Unreleased — Milestone 14: FMEA and hazard register
 - Added `src/core/fmea.ts`: a failure-mode-and-effects register with severity/occurrence/detection ratings, RPN = S×O×D, mitigations, owners, evidence, and closure status. Criticality banding never downgrades a catastrophic-severity (S ≥ 9–10) mode below "high" regardless of RPN, so a rare-but-catastrophic failure always surfaces in the report.
 - Open critical/high risks propagate: `openCriticalOrHighRisks` and `summarizeFmea` expose whether an unresolved high-consequence hazard exists, feeding the Rule-2 acceptance decision (a result is never acceptable while such a risk is open).

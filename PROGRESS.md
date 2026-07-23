@@ -21,8 +21,8 @@ criteria.
 | M12 | Load combos, uncertainty, optimization | ✅ **COMPLETE** | `milestone-12-uncertainty-optim` | 286 |
 | M13 | Component sizing, BOM, procurement | ✅ **COMPLETE** | `milestone-13-sizing-bom` | 297 |
 | M14 | FMEA, hazards, review records | ✅ **COMPLETE** | `milestone-14-fmea` | 307 |
-| M15 | 3D + customer/operator visualization | 🔄 in progress | `milestone-15-visualization` | — |
-| M16 | Digital twin & test correlation | ⬜ not started | — | — |
+| M15 | 3D + customer/operator visualization | ⬜ not started (needs browser session) | — | — |
+| M16 | Digital twin & test correlation | ✅ **COMPLETE** | `milestone-16-digital-twin` | 317 |
 | M17 | Truss/frame groundwork, external FEA | ⬜ not started | — | — |
 
 ---
@@ -156,6 +156,18 @@ combinations with no assumed code factors. **Not done:** Monte Carlo sampling
 **Not done:** UI hazard-register panel and wiring open-critical risks into the
 live report/status badge (the engine exposes `openCriticalOrHighRisks` ready
 for that binding). Deferred with other UI work.
+
+## M16 — Digital twin / test-data correlation ✅
+
+**Branch:** `milestone-16-digital-twin` · **Tests:** 317 · **Build:** clean
+
+- `calculations/testCorrelation.ts` — measured-channel model (raw NEVER mutated); non-destructive conditioning (scale/polarity/zero), moving-average filtering; predicted-vs-measured correlation with RMSE, peak error, peak-value error, timing error via best time-shift alignment, integral/energy error, and R²; residual signal
+- Parameter estimation by RMSE minimization (coordinate descent + golden section) that recovers a known parameter from synthetic data and flags unidentifiable parameters the data cannot constrain
+- 12 tests: raw-preservation, metric correctness on identical/shifted/scaled signals, offset recovery, slope recovery, identifiability warning, determinism
+
+**Not done:** UI overlay/residual plots and calibrated-scenario-copy persistence
+(the copy would be marked derived-from-test and still preliminary). Deferred with
+other UI work.
 
 ## Known carry-forward items
 
