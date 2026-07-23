@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased — Milestone 13: Component sizing, BOM, and procurement
+- Added `src/calculations/componentSizing.ts`: maps a calculated demand to a required rating (demand × design factor), applies project deratings to the published rating (kept separate from the demand, Rule 5), and matches against the component library. It ranks **all** candidates by margin — never auto-selecting the smallest passing part — and returns each with utilization, controlling criterion, verification status, and a pass/fail/excluded reason. Obsolete and unverified parts are excluded when verified data is required (Rule 4); a missing rating is reported as insufficient information, never treated as adequate (Rule 3).
+- Added `src/reports/procurementSheet.ts`: generates search phrases, RFQ text, and a CSV that clearly distinguishes the calculated requirement, recommended minimum, and any selected/verified component, and marks demands with no passing candidate as PROCUREMENT REQUIRED rather than inventing a part.
+- BOM assembly turns a no-candidate demand into a procurement line, not a fabricated selection.
+- Added 15 tests (`src/tests/componentSizing.test.ts`): required-rating math, derating, margin ranking, obsolete/unverified exclusion, missing-rating handling, BOM disposition, and search-sheet honesty.
+- Total test count: 297 (286 + 11 net). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** UI panels for BOM and procurement, and a cost roll-up.
+
 ## Unreleased — Milestone 12: Uncertainty, sensitivity, and optimization
 - Added `src/calculations/sensitivity.ts`: one-at-a-time sensitivity with tornado ordering, worst-case and best-case parameter combinations, parameter sweeps, and a 3-point (low/nominal/high) probability-of-exceedance that always returns the full response distribution behind the probability (Rule: no probabilistic conclusion without the values).
 - Added `src/calculations/optimization.ts`: a bounded constrained optimizer (coordinate descent + golden-section line search, gradient-free and deterministic) with an explicit feasibility flag, controlling (most-violated) constraints, full search history, and local objective sensitivity. It never returns an apparently valid design when the problem is infeasible, and never selects a point where the objective is non-finite (invalid geometry / solver failure). Constraint satisfaction uses a reported feasibility tolerance (a penalty method converges to an active constraint from the infeasible side by a vanishing amount).

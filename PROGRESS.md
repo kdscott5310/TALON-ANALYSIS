@@ -19,8 +19,8 @@ criteria.
 | M10 | Brake curve modeling | ✅ **COMPLETE** | `milestone-10-brake-curves` | 263 |
 | M11 | Lateral / out-of-plane cable dynamics | ✅ **COMPLETE** | `milestone-11-lateral-cable` | 273 |
 | M12 | Load combos, uncertainty, optimization | ✅ **COMPLETE** | `milestone-12-uncertainty-optim` | 286 |
-| M13 | Component sizing, BOM, procurement | 🔄 in progress | `milestone-13-sizing-bom` | — |
-| M14 | FMEA, hazards, review records | ⬜ not started | — | — |
+| M13 | Component sizing, BOM, procurement | ✅ **COMPLETE** | `milestone-13-sizing-bom` | 297 |
+| M14 | FMEA, hazards, review records | 🔄 in progress | `milestone-14-fmea` | — |
 | M15 | 3D + customer/operator visualization | ⬜ not started | — | — |
 | M16 | Digital twin & test correlation | ⬜ not started | — | — |
 | M17 | Truss/frame groundwork, external FEA | ⬜ not started | — | — |
@@ -133,6 +133,17 @@ coupling is beyond the reduced-order scope. UI wiring deferred.
 **Load combinations:** the data model (M6) already carries user-defined
 combinations with no assumed code factors. **Not done:** Monte Carlo sampling
 (3-point grid only) and wiring the optimizer to the CUFTS objective — deferred.
+
+## M13 — Component sizing, BOM & procurement ✅
+
+**Branch:** `milestone-13-sizing-bom` · **Tests:** 297 · **Build:** clean
+
+- `calculations/componentSizing.ts` — required rating = demand × design factor; deratings reduce the published rating (kept separate, Rule 5); ranks all candidates by margin without auto-picking the smallest; excludes obsolete/unverified when verified data required; missing rating → insufficient information (never adequate)
+- `reports/procurementSheet.ts` — search-phrase generator, RFQ text, and CSV that distinguishes calculated requirement / recommended minimum / selected / verified and marks unselected demands PROCUREMENT REQUIRED
+- BOM assembly turns a no-candidate demand into a procurement line, never a fabricated part
+- 15 tests covering rating math, deratings, ranking, exclusions, missing-rating, BOM, and search-sheet honesty
+
+**Not done:** UI for the BOM/procurement panels and cost roll-up — deferred with other UI work.
 
 ## Known carry-forward items
 
