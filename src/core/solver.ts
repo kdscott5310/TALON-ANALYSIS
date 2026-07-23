@@ -379,9 +379,28 @@ export const ELASTIC_CATENARY_V1: SolverDescriptor = {
     'and a comparison against the parabolic model.',
 };
 
+/** Damped payload pendulum — longitudinal + lateral swing (M9). */
+export const PAYLOAD_PENDULUM_V1: SolverDescriptor = {
+  id: 'payload-pendulum',
+  name: 'Damped payload pendulum',
+  version: '1.0.0',
+  fidelity: 2,
+  validation: 'benchmarkVerified',
+  category: 'payload-dynamics',
+  reducedOrder: true,
+  applicabilityNotes: [
+    'Point-mass payload on a massless rigid link of fixed length.',
+    'Longitudinal and lateral modes decoupled; no feedback into the cable.',
+    'Reaction estimate is quasi-static and conservative beyond ~20° swing.',
+  ],
+  description:
+    'RK4-integrated damped pendulum forced by trolley acceleration/braking ' +
+    '(longitudinal) and crosswind drag (lateral).',
+};
+
 /** Registers the built-in solver descriptors (idempotent per registry reset). */
 export function registerBuiltInSolvers(): void {
-  for (const d of [PARABOLIC_STATIC_V1, RK4_TROLLEY_V1, ELASTIC_CATENARY_V1]) {
+  for (const d of [PARABOLIC_STATIC_V1, RK4_TROLLEY_V1, ELASTIC_CATENARY_V1, PAYLOAD_PENDULUM_V1]) {
     if (!findSolver(d.id, d.version)) registerSolver(d);
   }
 }

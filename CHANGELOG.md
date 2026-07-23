@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased — Milestone 9: Wheel inertia and payload pendulum (Level 2)
+- Added `src/calculations/wheelDynamics.ts`: wheel rotational inertia captured as an effective translational mass `m_eff = m + I_total/r²` under rolling without slip. Inertia is entered directly or estimated from geometry as `I = k·m·r²` (k reported so an estimate is never mistaken for measured data). Provides rotational energy and wheel angular speed. Zero wheel inertia reduces **exactly** to the Milestone 3 point-mass acceleration a = F/m.
+- Added `src/calculations/payloadPendulum.ts`: an RK4-integrated damped pendulum with decoupled longitudinal (pitch, forced by trolley acceleration and braking) and lateral (sway, forced by crosswind and gust drag) modes. Reports peak pitch/sway, displacement envelope, attachment reaction, natural period, settling time, ground-clearance rise, and warnings when the swing exceeds a permitted angle or the small-angle regime.
+- Registered `payload-pendulum` (v1.0.0, Level 2, reduced-order) in the solver registry.
+- Added 20 tests (`src/tests/coupledDynamics.test.ts`): zero-inertia reduction, `m_eff` and uniform-disc inertia formulas, the small-angle period T = 2π·√(L/g), damped-vs-undamped settling, acceleration→pitch and crosswind→sway decoupling, the hard-brake large-swing warning path, determinism, and invalid-input rejection.
+- Total test count: 243 (228 + 15). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** wheel slip and bearing-loss sub-models, and feedback of the pendulum reaction into the trolley/cable — that coupling is the Milestone 11 reduced-order 3D cable model.
+
 ## Unreleased — Milestone 8: Nonlinear elastic cable analysis (Level 2)
 - Added `src/calculations/elasticCatenary.ts`, an exact elastic-catenary solver (Irvine, "Cable Structures", 1981) that solves the two geometric-closure equations by Newton iteration with an analytic Jacobian on the end-force components (H, V). This is TALON's first **fidelity Level 2** engineering model.
 - Accounts for unstretched length, axial stiffness EA, self-weight, support elevation difference, temperature strain, and constructional-stretch/creep allowance (applied as an effective change in unstretched length).

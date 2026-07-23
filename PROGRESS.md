@@ -15,8 +15,8 @@ criteria.
 | M6 | Generalized platform model | ✅ **COMPLETE** | `milestone-6-generalized-platform` | 186 |
 | M7 | Data provenance & component library | ✅ **COMPLETE** | `milestone-7-component-library` | 213 |
 | M8 | Nonlinear elastic cable analysis | ✅ **COMPLETE** | `milestone-8-nonlinear-cable` | 228 |
-| M9 | Wheel inertia, trolley dynamics, pendulum | 🔄 in progress | `milestone-9-coupled-dynamics` | — |
-| M10 | Brake curve modeling | ⬜ not started | — | — |
+| M9 | Wheel inertia, trolley dynamics, pendulum | ✅ **COMPLETE** | `milestone-9-coupled-dynamics` | 243 |
+| M10 | Brake curve modeling | 🔄 in progress | `milestone-10-brake-curves` | — |
 | M11 | Lateral / out-of-plane cable dynamics | ⬜ not started | — | — |
 | M12 | Load combos, uncertainty, optimization | ⬜ not started | — | — |
 | M13 | Component sizing, BOM, procurement | ⬜ not started | — | — |
@@ -84,6 +84,18 @@ residual and profile so the cable sags physically.
 and moving-load geometric stiffening — the catenary covers the core M8
 requirement; segmented discretization is follow-on work. UI selection of cable
 model deferred with other UI work.
+
+## M9 — Wheel inertia & payload pendulum ✅
+
+**Branch:** `milestone-9-coupled-dynamics` · **Tests:** 243 · **Build:** clean · **Fidelity: Level 2**
+
+- `calculations/wheelDynamics.ts` — wheel rotational inertia via effective-mass m_eff = m + I/r²; direct entry or geometry estimate (I = k·m·r², k reported); rotational energy and wheel angular speed. Zero inertia reduces EXACTLY to the M3 point mass.
+- `calculations/payloadPendulum.ts` — RK4 damped pendulum, longitudinal (trolley accel/brake) + lateral (crosswind/gust drag); reports peak angles, displacement envelope, attachment reaction, natural period, settling time, ground-clearance rise, and swing-limit warnings.
+- 20 benchmark tests: zero-inertia reduction, m_eff and disc-inertia formulas, small-angle period T=2π√(L/g), damped-vs-undamped settling, accel→pitch / wind→sway decoupling, hard-brake large-swing warning path, determinism, invalid-input rejection.
+
+**Not done (honestly deferred):** wheel slip/bearing-loss sub-model and full
+coupling of the pendulum reaction back into the trolley/cable (that coupling is
+the M11 reduced-order 3D cable model). UI wiring deferred.
 
 ## Known carry-forward items
 
