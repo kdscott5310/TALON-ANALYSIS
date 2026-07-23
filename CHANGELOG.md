@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## Unreleased — Milestone 15: 3D + customer/operator visualization
+- Added `src/visualizations/sceneData.ts`, a **pure** solver→3D mapping that is the calculation/rendering boundary (Rule 7): it turns the existing static/dynamic/lateral solver outputs into typed 3D geometry — node positions, cable polylines traced from the solved profiles, brake/capture zones, master-node force arrows, ground-clearance callout, a lateral sway corridor, and the anticipated descent trajectory. No engineering math is duplicated in it.
+- Added `src/components/Scene3D.tsx` (React Three Fiber): renders ground, crane mast, anchors and master node, the backstay and loaded/unloaded main cables plus the nominal chord, the trolley and suspended payload, brake/capture zones, master-node force vectors, and clearance/sway envelopes — in an **engineering** mode (nodes, force vectors, dimensions, deformed vs. chord) and a **customer/operator** mode (clean fixture, anticipated path, labeled zones, envelopes, no solver detail).
+- Added `src/components/VisualizationView.tsx`: the 3D View tab with mode toggle, side/front/top/isometric presets, orbit/pan/zoom, perspective/orthographic, deflection scale, a trolley-position scrubber, run playback synced to the dynamics trajectory, and PNG screenshot export. Three.js is lazy-loaded so the main bundle is unchanged (251 kB) and the 3D chunk (862 kB) loads only when the tab is opened.
+- Added a `CameraController` that imperatively repositions the camera and orbit target on preset change (R3F applies the `camera` prop only at mount).
+- Added 10 tests (`src/tests/sceneData.test.ts`) asserting node/cable/clearance/force/zone/trajectory geometry all trace back to solver outputs.
+- Browser-verified in a live session: a forced synchronous render produced 22 draw calls / 2905 triangles / 17 meshes / 9 lines with correct element colors; mode toggle and all four view presets behave correctly; no console errors.
+- Total test count: 334 (324 + 10). Build clean.
+- **This completes the v2 roadmap: all milestones M6–M17 are implemented.**
+
 ## Unreleased — Milestone 17: Truss/frame groundwork and external FEA interface
 - Added `src/calculations/trussFEM.ts`: a real linear-elastic 2D pin-jointed truss solver by the direct-stiffness method — global stiffness assembly, Gaussian-elimination solve on the free DOF, nodal displacements, support reactions, and member axial forces and stresses. It detects a mechanism (singular reduced stiffness) and reports it rather than returning nonsense, and rejects non-positive E or A instead of defaulting.
 - Added a neutral FE export (`talon-neutral-fe`, T2D2 truss elements) for downstream translation to CalculiX / OpenSees / Code_Aster. The export is honestly labeled: frames (bending), 3D, shells, solids, contact, and plasticity are **not** implemented and are documented as future external-solver integrations (Rule 11 — TALON never claims FEA it does not have).

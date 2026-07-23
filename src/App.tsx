@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { useAppStore, type WorkflowTab } from './state/store';
 import { InputPanel } from './components/InputPanel';
 import { SideView } from './components/SideView';
@@ -13,10 +14,16 @@ import { ReportView } from './components/ReportView';
 import { ValidationView } from './components/ValidationView';
 import { DISCLAIMER } from './models/scenario';
 
+// The 3D view pulls in Three.js; lazy-load so it stays out of the main bundle.
+const VisualizationView = lazy(() =>
+  import('./components/VisualizationView').then((m) => ({ default: m.VisualizationView })),
+);
+
 const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'setup', label: 'Setup' },
   { id: 'static', label: 'Static Analysis' },
   { id: 'dynamic', label: 'Dynamic Analysis' },
+  { id: 'visual3d', label: '3D View' },
   { id: 'compare', label: 'Compare' },
   { id: 'report', label: 'Report' },
   { id: 'validation', label: 'Validation' },
@@ -139,6 +146,12 @@ export default function App() {
         <div className="single-col">
           <ReportView />
         </div>
+      )}
+
+      {activeTab === 'visual3d' && (
+        <Suspense fallback={<div className="single-col"><p className="note">Loading 3D view…</p></div>}>
+          <VisualizationView />
+        </Suspense>
       )}
 
       {activeTab === 'validation' && <ValidationView />}

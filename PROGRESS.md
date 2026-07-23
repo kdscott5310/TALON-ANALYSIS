@@ -1,6 +1,6 @@
 # TALON v2 — Milestone Progress Tracker
 
-**Session result:** M6 completed earlier; **M7–M14, M16, M17 all completed and pushed** this session (10 milestones). Only **M15 (3D visualization)** remains — it needs a live browser session (Three.js/React Three Fiber) and is deferred, not stubbed. **324 tests pass, build clean, production audit = 0.**
+**Session result:** all milestones **M6–M17 complete and pushed** (M15 3D visualization built and verified in a browser session). **334 tests pass, build clean, production audit = 0.**
 
 Each milestone is on its own branch pushed to `github.com/kdscott5310/TALON-ANALYSIS`. `main` is untouched at the v1.1.0 release (`e54e1fa`).
 
@@ -19,7 +19,7 @@ Each milestone is on its own branch pushed to `github.com/kdscott5310/TALON-ANAL
 | M12 | Load combos, uncertainty, optimization | ✅ **COMPLETE** | `milestone-12-uncertainty-optim` | 286 |
 | M13 | Component sizing, BOM, procurement | ✅ **COMPLETE** | `milestone-13-sizing-bom` | 297 |
 | M14 | FMEA, hazards, review records | ✅ **COMPLETE** | `milestone-14-fmea` | 307 |
-| M15 | 3D + customer/operator visualization | ⬜ not started (needs browser session) | — | — |
+| M15 | 3D + customer/operator visualization | ✅ **COMPLETE** | `milestone-15-visualization` | 334 |
 | M16 | Digital twin & test correlation | ✅ **COMPLETE** | `milestone-16-digital-twin` | 317 |
 | M17 | Truss/frame groundwork, external FEA | ✅ **COMPLETE** | `milestone-17-fea-groundwork` | 324 |
 
@@ -179,6 +179,16 @@ other UI work.
 **Explicitly not implemented (documented as future external-solver integrations):**
 frames (bending), 3D, shells, solids, contact, plasticity — TALON never claims
 FEA it does not have (Rule 11).
+
+## M15 — 3D + customer/operator visualization ✅
+
+**Branch:** `milestone-15-visualization` · **Tests:** 334 · **Build:** clean (Three.js lazy-chunked, main bundle unchanged)
+
+- `visualizations/sceneData.ts` — PURE solver→3D mapping (Rule 7 boundary): node positions, cable polylines from solved profiles, zones, force vectors, clearance, sway corridor, descent trajectory. No engineering math duplicated. 10 tests trace every output to a solver result.
+- `components/Scene3D.tsx` — React Three Fiber scene: ground, crane mast, anchors/master node, backstay + loaded/unloaded main cables, nominal chord, trolley + payload, brake/capture zones, master-node force arrows, clearance/sway envelopes. Engineering vs customer/operator modes.
+- `components/VisualizationView.tsx` — 3D View tab: mode toggle, side/front/top/iso presets, orbit/pan/zoom, perspective/ortho, deflection scale, trolley scrubber, run playback, PNG screenshot export.
+- **Browser-verified:** forced synchronous render shows 22 draw calls / 2905 triangles / 17 meshes / 9 lines with correct element colors; mode toggle changes scene content (17→14 meshes); all four view presets move the camera to distinct positions. No console errors.
+- **Environment note:** the preview pane runs hidden (no requestAnimationFrame), so R3F's continuous loop can't auto-paint there; rendering was proven via a forced synchronous render. In a normal (visible) browser the RAF loop runs and the scene animates live.
 
 ## Known carry-forward items
 
