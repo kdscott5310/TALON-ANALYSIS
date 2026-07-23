@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased — Milestone 12: Uncertainty, sensitivity, and optimization
+- Added `src/calculations/sensitivity.ts`: one-at-a-time sensitivity with tornado ordering, worst-case and best-case parameter combinations, parameter sweeps, and a 3-point (low/nominal/high) probability-of-exceedance that always returns the full response distribution behind the probability (Rule: no probabilistic conclusion without the values).
+- Added `src/calculations/optimization.ts`: a bounded constrained optimizer (coordinate descent + golden-section line search, gradient-free and deterministic) with an explicit feasibility flag, controlling (most-violated) constraints, full search history, and local objective sensitivity. It never returns an apparently valid design when the problem is infeasible, and never selects a point where the objective is non-finite (invalid geometry / solver failure). Constraint satisfaction uses a reported feasibility tolerance (a penalty method converges to an active constraint from the infeasible side by a vanishing amount).
+- Added 13 tests (`src/tests/uncertaintyOptim.test.ts`) against analytical optima: convex 1-D and 2-D minima, an active inequality bound, infeasible-problem detection, failed-solve rejection, tornado ordering, worst/best combinations, sweeps, and exceedance probability.
+- Total test count: 286 (273 + 13). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** Monte Carlo sampling (a 3-point grid is provided) and wiring the optimizer directly to the CUFTS objective/constraints — the engines are general and take a user objective; the CUFTS binding is UI-layer work.
+
 ## Unreleased — Milestone 11: Lateral / out-of-plane cable dynamics (Level 2, reduced-order)
 - Added `src/calculations/lateralCableDynamics.ts`: a lumped-mass tensioned-string model for out-of-plane (transverse) cable motion with distributed mass, geometric stiffness from the axial tension, structural damping, distributed steady wind and gust, a moving trolley mass, and a lateral brake impulse. CFL-stable explicit integration.
 - Reports the fundamental frequency, peak lateral displacement, static wind deflection, dynamic amplification, peak out-of-plane support reaction (crane side-load estimate), dominant response frequency, and the lateral envelope along the span.

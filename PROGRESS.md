@@ -18,8 +18,8 @@ criteria.
 | M9 | Wheel inertia, trolley dynamics, pendulum | ✅ **COMPLETE** | `milestone-9-coupled-dynamics` | 243 |
 | M10 | Brake curve modeling | ✅ **COMPLETE** | `milestone-10-brake-curves` | 263 |
 | M11 | Lateral / out-of-plane cable dynamics | ✅ **COMPLETE** | `milestone-11-lateral-cable` | 273 |
-| M12 | Load combos, uncertainty, optimization | 🔄 in progress | `milestone-12-uncertainty-optim` | — |
-| M13 | Component sizing, BOM, procurement | ⬜ not started | — | — |
+| M12 | Load combos, uncertainty, optimization | ✅ **COMPLETE** | `milestone-12-uncertainty-optim` | 286 |
+| M13 | Component sizing, BOM, procurement | 🔄 in progress | `milestone-13-sizing-bom` | — |
 | M14 | FMEA, hazards, review records | ⬜ not started | — | — |
 | M15 | 3D + customer/operator visualization | ⬜ not started | — | — |
 | M16 | Digital twin & test correlation | ⬜ not started | — | — |
@@ -121,6 +121,18 @@ brake-fade thermal model, and wiring the curves into the trolley dynamics run
 **Not done (honestly deferred):** full 3-DOF (vertical + axial) coupling — this
 solves the transverse mode with axial tension held static; full multibody
 coupling is beyond the reduced-order scope. UI wiring deferred.
+
+## M12 — Uncertainty, sensitivity & optimization ✅
+
+**Branch:** `milestone-12-uncertainty-optim` · **Tests:** 286 · **Build:** clean
+
+- `calculations/sensitivity.ts` — one-at-a-time sensitivity with tornado ordering, worst/best-case combinations, parameter sweeps, and 3-point probability-of-exceedance that always returns the full distribution behind the number
+- `calculations/optimization.ts` — bounded constrained optimizer (coordinate descent + golden-section) with explicit feasibility flag, controlling (most-violated) constraints, search history, and local sensitivity. NEVER returns a valid-looking design when infeasible; never selects a non-finite (failed-solve) point
+- 13 tests against analytical optima: convex 1-D/2-D minima, active-constraint bound, infeasible-problem detection, failed-solve rejection, tornado order, exceedance probability
+
+**Load combinations:** the data model (M6) already carries user-defined
+combinations with no assumed code factors. **Not done:** Monte Carlo sampling
+(3-point grid only) and wiring the optimizer to the CUFTS objective — deferred.
 
 ## Known carry-forward items
 
