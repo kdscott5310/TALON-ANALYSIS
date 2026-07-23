@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased — Milestone 17: Truss/frame groundwork and external FEA interface
+- Added `src/calculations/trussFEM.ts`: a real linear-elastic 2D pin-jointed truss solver by the direct-stiffness method — global stiffness assembly, Gaussian-elimination solve on the free DOF, nodal displacements, support reactions, and member axial forces and stresses. It detects a mechanism (singular reduced stiffness) and reports it rather than returning nonsense, and rejects non-positive E or A instead of defaulting.
+- Added a neutral FE export (`talon-neutral-fe`, T2D2 truss elements) for downstream translation to CalculiX / OpenSees / Code_Aster. The export is honestly labeled: frames (bending), 3D, shells, solids, contact, and plasticity are **not** implemented and are documented as future external-solver integrations (Rule 11 — TALON never claims FEA it does not have).
+- Added 8 tests (`src/tests/trussFEM.test.ts`) with hand-calc benchmarks: single-bar δ = P·L/(E·A) and reaction −P, symmetric two-bar truss member force P/(2·sinθ), mechanism detection, invalid-property rejection, and the neutral-export shape and labeling.
+- Total test count: 324 (317 + 7). Build clean; audit unchanged (dev-only, R-0).
+- **Not implemented (by design):** the general FE package beyond 2D trusses; the roadmap's future FE families remain external-solver integrations.
+
 ## Unreleased — Milestone 16: Digital twin / measured-data correlation
 - Added `src/calculations/testCorrelation.ts`: imports measured test channels and correlates the model against them. Raw samples are never mutated — conditioning (scale, polarity, zero correction) and moving-average filtering each return a new array and the original is retained (Rule: preserve raw).
 - Correlation reports RMSE, peak error, peak-value error, a timing error found by best constant time-shift alignment, an integral/energy error, R², and the full residual signal.

@@ -23,7 +23,7 @@ criteria.
 | M14 | FMEA, hazards, review records | ✅ **COMPLETE** | `milestone-14-fmea` | 307 |
 | M15 | 3D + customer/operator visualization | ⬜ not started (needs browser session) | — | — |
 | M16 | Digital twin & test correlation | ✅ **COMPLETE** | `milestone-16-digital-twin` | 317 |
-| M17 | Truss/frame groundwork, external FEA | ⬜ not started | — | — |
+| M17 | Truss/frame groundwork, external FEA | ✅ **COMPLETE** | `milestone-17-fea-groundwork` | 324 |
 
 ---
 
@@ -168,6 +168,19 @@ for that binding). Deferred with other UI work.
 **Not done:** UI overlay/residual plots and calibrated-scenario-copy persistence
 (the copy would be marked derived-from-test and still preliminary). Deferred with
 other UI work.
+
+## M17 — Truss/frame groundwork & external FEA interface ✅
+
+**Branch:** `milestone-17-fea-groundwork` · **Tests:** 324 · **Build:** clean
+
+- `calculations/trussFEM.ts` — real 2D pin-jointed truss direct-stiffness solver: global stiffness assembly, Gaussian-elimination solve, nodal displacements, support reactions, member axial forces/stresses; detects mechanisms (singular) and rejects non-positive E/A
+- Neutral FE export (`talon-neutral-fe`, T2D2 elements) for downstream translation to CalculiX/OpenSees/Code_Aster, honestly labeled: frames/3D/shells/solids are NOT implemented
+- **Hand-calc benchmarks:** single bar δ=PL/EA & reaction=−P; symmetric two-bar truss F=P/(2 sinθ); mechanism detection
+- 8 tests
+
+**Explicitly not implemented (documented as future external-solver integrations):**
+frames (bending), 3D, shells, solids, contact, plasticity — TALON never claims
+FEA it does not have (Rule 11).
 
 ## Known carry-forward items
 
