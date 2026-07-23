@@ -1,10 +1,8 @@
 # TALON v2 — Milestone Progress Tracker
 
-Live status of the 17-milestone platform roadmap. Updated as each milestone
-lands. See [ROADMAP_V2.md](ROADMAP_V2.md) for full scope and acceptance
-criteria.
+**Session result:** M6 completed earlier; **M7–M14, M16, M17 all completed and pushed** this session (10 milestones). Only **M15 (3D visualization)** remains — it needs a live browser session (Three.js/React Three Fiber) and is deferred, not stubbed. **324 tests pass, build clean, production audit = 0.**
 
-**Baseline:** `main` @ `e54e1fa` — v1.1.0, Milestones 1–5, 115 tests.
+Each milestone is on its own branch pushed to `github.com/kdscott5310/TALON-ANALYSIS`. `main` is untouched at the v1.1.0 release (`e54e1fa`).
 
 ---
 
