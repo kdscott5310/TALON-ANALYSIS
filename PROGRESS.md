@@ -16,8 +16,8 @@ criteria.
 | M7 | Data provenance & component library | ✅ **COMPLETE** | `milestone-7-component-library` | 213 |
 | M8 | Nonlinear elastic cable analysis | ✅ **COMPLETE** | `milestone-8-nonlinear-cable` | 228 |
 | M9 | Wheel inertia, trolley dynamics, pendulum | ✅ **COMPLETE** | `milestone-9-coupled-dynamics` | 243 |
-| M10 | Brake curve modeling | 🔄 in progress | `milestone-10-brake-curves` | — |
-| M11 | Lateral / out-of-plane cable dynamics | ⬜ not started | — | — |
+| M10 | Brake curve modeling | ✅ **COMPLETE** | `milestone-10-brake-curves` | 263 |
+| M11 | Lateral / out-of-plane cable dynamics | 🔄 in progress | `milestone-11-lateral-cable` | — |
 | M12 | Load combos, uncertainty, optimization | ⬜ not started | — | — |
 | M13 | Component sizing, BOM, procurement | ⬜ not started | — | — |
 | M14 | FMEA, hazards, review records | ⬜ not started | — | — |
@@ -96,6 +96,18 @@ model deferred with other UI work.
 **Not done (honestly deferred):** wheel slip/bearing-loss sub-model and full
 coupling of the pendulum reaction back into the trolley/cable (that coupling is
 the M11 reduced-order 3D cable model). UI wiring deferred.
+
+## M10 — Brake curve modeling ✅
+
+**Branch:** `milestone-10-brake-curves` · **Tests:** 263 · **Build:** clean
+
+- `calculations/brakeCurves.ts` — displacement/velocity/time-force tables, force-stroke curve, and measured CSV import; linear interpolation that CLAMPS at the endpoints and flags extrapolation (never silently extrapolates); hydraulic cylinder+orifice model (F ∝ v²), eddy-current force-speed-gap model (peak + 1/gap²)
+- Original imported samples and raw CSV text preserved separately (Rule 5); warnings for extrapolation, negative force, discontinuities, and force beyond rating
+- 24 tests: exact interpolation, clamp-not-extrapolate, per-axis selection, hydraulic v² law, eddy 1/gap² scaling, CSV parse/sort/reject
+
+**Not done (honestly deferred):** accumulator/relief transient dynamics,
+brake-fade thermal model, and wiring the curves into the trolley dynamics run
+(the M3 solver still uses the idealized laws until UI selection is added).
 
 ## Known carry-forward items
 

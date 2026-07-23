@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased — Milestone 10: Brake curve modeling
+- Added `src/calculations/brakeCurves.ts`: displacement–force, velocity–force, and time–force tables, a force–stroke curve, and imported measured-CSV curves, plus physics-based hydraulic-orifice (force ∝ v²) and eddy-current (force–speed–gap, peak roll-off and 1/gap² field falloff) models.
+- Interpolation **clamps** at the sampled endpoints and reports extrapolation rather than ever extrapolating linearly (Rule 2). Evaluation surfaces warnings for out-of-range queries, force beyond an entered rating, negative-force samples, non-monotone abscissae, and steep discontinuities.
+- The original imported samples and raw CSV text are preserved on the curve, separate from interpolated values (Rule 5).
+- Added 24 tests (`src/tests/brakeCurves.test.ts`): exact between-sample interpolation, clamp-not-extrapolate above/below range, per-axis selection by curve kind, the hydraulic quadratic law and closed form, eddy-current low-speed linearity / high-speed roll-off / 1/gap² scaling, and CSV parse/sort/rejection with raw-text preservation.
+- Total test count: 263 (243 + 20 net). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** accumulator/relief transient dynamics, brake-fade thermal model, and wiring the curves into the live trolley-dynamics run (the Milestone 3 solver still uses the idealized brake laws until UI selection lands).
+
 ## Unreleased — Milestone 9: Wheel inertia and payload pendulum (Level 2)
 - Added `src/calculations/wheelDynamics.ts`: wheel rotational inertia captured as an effective translational mass `m_eff = m + I_total/r²` under rolling without slip. Inertia is entered directly or estimated from geometry as `I = k·m·r²` (k reported so an estimate is never mistaken for measured data). Provides rotational energy and wheel angular speed. Zero wheel inertia reduces **exactly** to the Milestone 3 point-mass acceleration a = F/m.
 - Added `src/calculations/payloadPendulum.ts`: an RK4-integrated damped pendulum with decoupled longitudinal (pitch, forced by trolley acceleration and braking) and lateral (sway, forced by crosswind and gust drag) modes. Reports peak pitch/sway, displacement envelope, attachment reaction, natural period, settling time, ground-clearance rise, and warnings when the swing exceeds a permitted angle or the small-angle regime.
