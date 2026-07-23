@@ -17,8 +17,8 @@ criteria.
 | M8 | Nonlinear elastic cable analysis | ✅ **COMPLETE** | `milestone-8-nonlinear-cable` | 228 |
 | M9 | Wheel inertia, trolley dynamics, pendulum | ✅ **COMPLETE** | `milestone-9-coupled-dynamics` | 243 |
 | M10 | Brake curve modeling | ✅ **COMPLETE** | `milestone-10-brake-curves` | 263 |
-| M11 | Lateral / out-of-plane cable dynamics | 🔄 in progress | `milestone-11-lateral-cable` | — |
-| M12 | Load combos, uncertainty, optimization | ⬜ not started | — | — |
+| M11 | Lateral / out-of-plane cable dynamics | ✅ **COMPLETE** | `milestone-11-lateral-cable` | 273 |
+| M12 | Load combos, uncertainty, optimization | 🔄 in progress | `milestone-12-uncertainty-optim` | — |
 | M13 | Component sizing, BOM, procurement | ⬜ not started | — | — |
 | M14 | FMEA, hazards, review records | ⬜ not started | — | — |
 | M15 | 3D + customer/operator visualization | ⬜ not started | — | — |
@@ -108,6 +108,19 @@ the M11 reduced-order 3D cable model). UI wiring deferred.
 **Not done (honestly deferred):** accumulator/relief transient dynamics,
 brake-fade thermal model, and wiring the curves into the trolley dynamics run
 (the M3 solver still uses the idealized laws until UI selection is added).
+
+## M11 — Lateral / out-of-plane cable dynamics ✅
+
+**Branch:** `milestone-11-lateral-cable` · **Tests:** 273 · **Build:** clean · **Fidelity: Level 2 (reduced-order)**
+
+- `calculations/lateralCableDynamics.ts` — lumped-mass tensioned-string model for out-of-plane sway: distributed mass, geometric stiffness from axial tension, damping, distributed wind/gust, moving trolley mass, lateral brake impulse
+- Reports fundamental frequency, peak lateral displacement, static wind deflection, dynamic amplification, peak out-of-plane support reaction (crane side-load), dominant response frequency, envelope; CFL-stable explicit integration
+- **Analytical benchmark:** discrete model matches the continuous string fundamental f=(1/2L)√(T/μ) to <0.1% and converges with node count; static wind deflection matches q·L²/(8T)
+- 10 tests; persistently labeled reduced-order (not FEA)
+
+**Not done (honestly deferred):** full 3-DOF (vertical + axial) coupling — this
+solves the transverse mode with axial tension held static; full multibody
+coupling is beyond the reduced-order scope. UI wiring deferred.
 
 ## Known carry-forward items
 

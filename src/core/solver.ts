@@ -398,9 +398,34 @@ export const PAYLOAD_PENDULUM_V1: SolverDescriptor = {
     '(longitudinal) and crosswind drag (lateral).',
 };
 
+/** Lateral / out-of-plane cable dynamics — reduced-order lumped mass (M11). */
+export const LATERAL_CABLE_V1: SolverDescriptor = {
+  id: 'lateral-cable-dynamics',
+  name: 'Lateral cable dynamics (lumped mass)',
+  version: '1.0.0',
+  fidelity: 2,
+  validation: 'benchmarkVerified',
+  category: 'cable-dynamics',
+  reducedOrder: true,
+  applicabilityNotes: [
+    'Transverse (out-of-plane) motion only; axial tension held at its static value.',
+    'Linear geometric stiffness (small lateral slope).',
+    'Reduced-order lumped-mass string — NOT finite-element analysis.',
+  ],
+  description:
+    'Tensioned-string lumped-mass model for out-of-plane sway, support side-load, ' +
+    'dominant frequency, and dynamic amplification under wind, gust, and brake impulse.',
+};
+
 /** Registers the built-in solver descriptors (idempotent per registry reset). */
 export function registerBuiltInSolvers(): void {
-  for (const d of [PARABOLIC_STATIC_V1, RK4_TROLLEY_V1, ELASTIC_CATENARY_V1, PAYLOAD_PENDULUM_V1]) {
+  for (const d of [
+    PARABOLIC_STATIC_V1,
+    RK4_TROLLEY_V1,
+    ELASTIC_CATENARY_V1,
+    PAYLOAD_PENDULUM_V1,
+    LATERAL_CABLE_V1,
+  ]) {
     if (!findSolver(d.id, d.version)) registerSolver(d);
   }
 }

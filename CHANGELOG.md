@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased — Milestone 11: Lateral / out-of-plane cable dynamics (Level 2, reduced-order)
+- Added `src/calculations/lateralCableDynamics.ts`: a lumped-mass tensioned-string model for out-of-plane (transverse) cable motion with distributed mass, geometric stiffness from the axial tension, structural damping, distributed steady wind and gust, a moving trolley mass, and a lateral brake impulse. CFL-stable explicit integration.
+- Reports the fundamental frequency, peak lateral displacement, static wind deflection, dynamic amplification, peak out-of-plane support reaction (crane side-load estimate), dominant response frequency, and the lateral envelope along the span.
+- Registered `lateral-cable-dynamics` (v1.0.0, Level 2, reduced-order) and labeled it — in assumptions and warnings — as **not** finite-element analysis (Rule 11).
+- Added 10 tests (`src/tests/lateralCableDynamics.test.ts`): the discretization reproduces the continuous tensioned-string fundamental f = (1/2L)·√(T/μ) to within 0.1% and converges with node count; static wind deflection matches q·L²/(8T); gust overshoot, stability, determinism, and invalid-input rejection.
+- Total test count: 273 (263 + 10). Build clean; audit unchanged (dev-only, R-0).
+- **Deferred (honestly):** full three-DOF coupling (vertical + axial with the transverse mode) — the axial tension is held at its static value here; fuller multibody/FE coupling is out of the reduced-order scope.
+
 ## Unreleased — Milestone 10: Brake curve modeling
 - Added `src/calculations/brakeCurves.ts`: displacement–force, velocity–force, and time–force tables, a force–stroke curve, and imported measured-CSV curves, plus physics-based hydraulic-orifice (force ∝ v²) and eddy-current (force–speed–gap, peak roll-off and 1/gap² field falloff) models.
 - Interpolation **clamps** at the sampled endpoints and reports extrapolation rather than ever extrapolating linearly (Rule 2). Evaluation surfaces warnings for out-of-range queries, force beyond an entered rating, negative-force samples, non-monotone abscissae, and steep discontinuities.
