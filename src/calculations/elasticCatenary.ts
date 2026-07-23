@@ -308,7 +308,11 @@ export function solveElasticCatenary(input: ElasticCatenaryInput): ElasticCatena
   for (iterations = 1; iterations <= maxIter; iterations++) {
     const g = geometry(H, V, L0, w, EA0);
     rx = g.x - spanM;
-    rz = g.z - elevDiffM;
+    // geometry() integrates Irvine's z as an UPWARD-bowing arc for +V. The
+    // physical cable sags DOWN under gravity, i.e. zPhysical = -g.z, so the
+    // closure constraint zPhysical(L0) = elevDiff becomes g.z(L0) = -elevDiff.
+    // (The Jacobian z-row is unchanged: d(g.z + elevDiff)/dvars = d(g.z)/dvars.)
+    rz = g.z + elevDiffM;
     if (!Number.isFinite(rx) || !Number.isFinite(rz)) {
       return fail('Solver produced a non-finite residual; check EA, length, and geometry.');
     }
@@ -369,9 +373,12 @@ export function solveElasticCatenary(input: ElasticCatenaryInput): ElasticCatena
     const s = (i / nPts) * L0;
     const g = geometry(H, V, s, w, EA0);
     const T = Math.hypot(H, V - w * s);
-    profile.push({ s, x: g.x, z: g.z, tensionN: T, strain: T / EA0 });
-    if (g.z < lowestZ) {
-      lowestZ = g.z;
+    // Negate to physical (down-sagging) coordinates, consistent with the
+    // z-closure sign above.
+    const zPhys = -g.z;
+    profile.push({ s, x: g.x, z: zPhys, tensionN: T, strain: T / EA0 });
+    if (zPhys < lowestZ) {
+      lowestZ = zPhys;
       lowestX = g.x;
     }
   }

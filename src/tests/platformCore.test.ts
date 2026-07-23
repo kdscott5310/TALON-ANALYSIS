@@ -231,16 +231,17 @@ describe('solver contracts and fidelity (Rules 1, 2, 6, 11)', () => {
     registerBuiltInSolvers();
   });
 
-  it('registers the built-in v1 solvers as Level 1 reduced-order', () => {
+  it('registers the built-in solvers with valid, reduced-order descriptors', () => {
     const solvers = listSolvers();
-    expect(solvers).toHaveLength(2);
+    expect(solvers.length).toBeGreaterThanOrEqual(3);
     for (const s of solvers) {
-      expect(s.fidelity).toBe(1);
       expect(s.reducedOrder).toBe(true); // Rule 11
       expect(s.version).toMatch(/^\d+\.\d+\.\d+$/);
     }
-    expect(findSolver('cufts-parabolic-static')).toBeDefined();
-    expect(findSolver('cufts-rk4-trolley', '1.0.0')).toBeDefined();
+    // The two v1 solvers are Level 1; the catenary is the first Level 2.
+    expect(findSolver('cufts-parabolic-static')!.fidelity).toBe(1);
+    expect(findSolver('cufts-rk4-trolley', '1.0.0')!.fidelity).toBe(1);
+    expect(findSolver('cable-elastic-catenary')!.fidelity).toBe(2);
     expect(findSolver('nonexistent')).toBeUndefined();
   });
 

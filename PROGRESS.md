@@ -14,8 +14,8 @@ criteria.
 |---|---|---|---|---|
 | M6 | Generalized platform model | ✅ **COMPLETE** | `milestone-6-generalized-platform` | 186 |
 | M7 | Data provenance & component library | ✅ **COMPLETE** | `milestone-7-component-library` | 213 |
-| M8 | Nonlinear elastic cable analysis | 🔄 in progress | `milestone-8-nonlinear-cable` | — |
-| M9 | Wheel inertia, trolley dynamics, pendulum | ⬜ not started | — | — |
+| M8 | Nonlinear elastic cable analysis | ✅ **COMPLETE** | `milestone-8-nonlinear-cable` | 228 |
+| M9 | Wheel inertia, trolley dynamics, pendulum | 🔄 in progress | `milestone-9-coupled-dynamics` | — |
 | M10 | Brake curve modeling | ⬜ not started | — | — |
 | M11 | Lateral / out-of-plane cable dynamics | ⬜ not started | — | — |
 | M12 | Load combos, uncertainty, optimization | ⬜ not started | — | — |
@@ -65,6 +65,25 @@ empty CSV values become MISSING, not zero; adapters that bypass access controls
 are refused.
 
 **Not done:** UI for browsing/editing the library (deferred with other UI work).
+
+## M8 — Nonlinear elastic cable analysis ✅
+
+**Branch:** `milestone-8-nonlinear-cable` · **Tests:** 228 · **Build:** clean · **Fidelity: Level 2**
+
+- `calculations/elasticCatenary.ts` — exact elastic-catenary equations (Irvine 1981) solved by Newton iteration with an analytic Jacobian on the end-force components (H, V)
+- Accounts for unstretched length, EA, self-weight, support elevation, temperature strain, and creep (as an effective-length change)
+- Reports convergence status, iteration count, force/geometry residuals, tension & strain distribution, support reactions, elongation, sag, lowest point, and a parabolic comparison
+- Registered as the first **Level 2** solver (`cable-elastic-catenary`), reduced-order
+- 15 benchmark/failure tests: catenary→parabolic reduction in the small-sag limit, H = wL²/8d, elastic elongation T·L/EA, temperature effect, sloped-span tensions, mesh-independent forces; plus failure tests for invalid EA, too-short cable, bad geometry, deep sag, and slack detection
+
+**Fixed during M8:** the committed solver bowed the profile upward (maxSag
+always 0); corrected the vertical sign convention consistently in the z-closure
+residual and profile so the cable sags physically.
+
+**Not done (honestly deferred):** segmented nonlinear multi-element cable model
+and moving-load geometric stiffening — the catenary covers the core M8
+requirement; segmented discretization is follow-on work. UI selection of cable
+model deferred with other UI work.
 
 ## Known carry-forward items
 

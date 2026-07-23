@@ -358,12 +358,30 @@ export const RK4_TROLLEY_V1: SolverDescriptor = {
     'gravity, rolling resistance, aerodynamic drag, wind, and selectable brake laws.',
 };
 
-/** Registers the built-in v1 solver descriptors (idempotent per registry reset). */
+/** Elastic catenary — the first Level-2 (advanced preliminary) solver (M8). */
+export const ELASTIC_CATENARY_V1: SolverDescriptor = {
+  id: 'cable-elastic-catenary',
+  name: 'Elastic catenary cable',
+  version: '1.0.0',
+  fidelity: 2,
+  validation: 'benchmarkVerified',
+  category: 'cable-static',
+  reducedOrder: true,
+  applicabilityNotes: [
+    'Perfectly flexible, linear-elastic (constant EA) cable; no material nonlinearity.',
+    'Static planar equilibrium; out-of-plane load is the Milestone 11 model.',
+    'Temperature and creep applied as an effective unstretched-length change.',
+    'Tension-only: a near-zero minimum tension is reported as slack, not accepted.',
+  ],
+  description:
+    'Exact elastic-catenary equations solved by Newton iteration on the end-force ' +
+    'components, reporting convergence, residuals, tension and strain distribution, ' +
+    'and a comparison against the parabolic model.',
+};
+
+/** Registers the built-in solver descriptors (idempotent per registry reset). */
 export function registerBuiltInSolvers(): void {
-  if (!findSolver(PARABOLIC_STATIC_V1.id, PARABOLIC_STATIC_V1.version)) {
-    registerSolver(PARABOLIC_STATIC_V1);
-  }
-  if (!findSolver(RK4_TROLLEY_V1.id, RK4_TROLLEY_V1.version)) {
-    registerSolver(RK4_TROLLEY_V1);
+  for (const d of [PARABOLIC_STATIC_V1, RK4_TROLLEY_V1, ELASTIC_CATENARY_V1]) {
+    if (!findSolver(d.id, d.version)) registerSolver(d);
   }
 }

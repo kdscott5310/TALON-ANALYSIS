@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## Unreleased — Milestone 8: Nonlinear elastic cable analysis (Level 2)
+- Added `src/calculations/elasticCatenary.ts`, an exact elastic-catenary solver (Irvine, "Cable Structures", 1981) that solves the two geometric-closure equations by Newton iteration with an analytic Jacobian on the end-force components (H, V). This is TALON's first **fidelity Level 2** engineering model.
+- Accounts for unstretched length, axial stiffness EA, self-weight, support elevation difference, temperature strain, and constructional-stretch/creep allowance (applied as an effective change in unstretched length).
+- Reports everything Rule 6 requires: convergence status, iteration count, force and geometric-closure residuals, cable profile, lowest point, tension and strain distribution, support reactions, elastic elongation, maximum sag, and an explicit comparison against the parabolic model.
+- Handles the failure modes explicitly rather than returning a clean result: invalid or non-positive EA (never defaulted), a physically too-short cable, invalid span/geometry, non-convergence, a singular Jacobian, and near-zero-tension slack. High axial strain and near-vertical geometry are flagged as applicability cautions.
+- Registered `cable-elastic-catenary` (v1.0.0, Level 2, reduced-order, benchmark-verified) in the solver registry.
+- Added 15 tests (`src/tests/elasticCatenary.test.ts`): catenary→parabolic reduction in the small-sag limit, the shallow-cable relation H = w·L²/(8·sag), elastic elongation matching T·L/EA, temperature-driven sag change, sloped-span tension ordering, resolution-independent converged forces, determinism, and the full set of failure/edge cases.
+- Corrected a vertical sign convention in the committed solver draft: the profile bowed upward (so maximum sag read as 0). The z-closure residual and profile now sag physically; the (H, V) equilibrium solve was already correct.
+- Total test count: 228 (213 from M7 + 15 catenary). Build clean; `npm audit` unchanged (dev-only, accepted R-0).
+- **Deferred (honestly):** segmented multi-element nonlinear cable and moving-load geometric stiffening — the elastic catenary covers the core requirement; segmented discretization is follow-on within M8's scope.
+
 ## Unreleased — Milestone 6: Generalized platform model
 
 Second and final pass of Milestone 6 under the expanded 17-milestone platform
