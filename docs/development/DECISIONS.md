@@ -15,6 +15,30 @@ Format:
 
 ---
 
+## D-008 — 6E extends editing to BCs/loads via the same pure-ops pattern  (2026-07-24, 6E)
+
+**Decision.** Supports, constraints, loads, load cases, and user load
+combinations are edited through pure immutable operations in
+`core/projectEdits.ts` (extending 6D), surfaced by a new `FixtureInspector`
+component rendered inside the canvas for custom projects. Selection stays local
+to `EditorCanvas`; the inspector receives it as a prop (no store-level selection
+state) — the `Selection` type is exported from `EditorCanvas`.
+
+**Integrity.** A shared `normalizeReferences` helper prunes load-case factors
+that name a deleted load and combination terms that name a deleted load case;
+`deleteNode`/`deleteElement`/`removeLoad`/`removeLoadCase` all run it, so
+`checkProjectIntegrity` stays clean under any deletion.
+
+**Governance.** Load combinations are created with unit factors and **no
+`standard`** — no building-code combination is ever assumed (M12 rule).
+Force inputs are unit-converted (lbf↔N) only; no engineering math in the UI.
+
+**Consequences.** Editing remains gated to custom projects (CUFTS read-only).
+Canvas gains support-triangle and load-arrow glyphs. Browser-verified:
+set-support, add-load (500 lbf → 2224 N), create case + combination all persist
+across reload with no console errors. `projectSupportsLoads.test.ts` covers the
+ops, cascades, and the serialization round-trip.
+
 ## D-007 — 6D adds an authoritative-geometry "custom" project type  (2026-07-24, 6D)
 
 **Decision.** Rather than editing CUFTS geometry (which is projected from its

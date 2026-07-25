@@ -18,6 +18,7 @@ import { useAppStore } from '../state/store';
 import { buildEditorScene, type EditorScene, type P2 } from '../visualizations/editorScene';
 import { isCustomProject } from '../core/templates/custom';
 import { addElement, addNode, deleteElement, deleteNode, moveNode } from '../core/projectEdits';
+import { FixtureInspector } from './FixtureInspector';
 import { formatLength } from '../units/units';
 import type { NodeRole } from '../core/coordinates';
 import type { ElementType } from '../core/elements';
@@ -29,7 +30,7 @@ interface ViewBox {
   h: number;
 }
 
-type Selection = { kind: 'node' | 'edge' | 'attachment'; id: string } | null;
+export type Selection = { kind: 'node' | 'edge' | 'attachment'; id: string } | null;
 type Mode = 'select' | 'add' | 'connect';
 
 /** Grid to which placed / moved nodes snap, metres. */
@@ -339,6 +340,42 @@ export function EditorCanvas() {
             );
           })}
 
+          {project.supports.map((s) => {
+            const p = nodePos.get(s.nodeId);
+            if (!p) return null;
+            return (
+              <path
+                key={s.id}
+                d={`M ${sx(p)} ${sy(p) + nodeR * 1.2} L ${sx(p) - nodeR * 1.1} ${sy(p) + nodeR * 2.8} L ${sx(p) + nodeR * 1.1} ${sy(p) + nodeR * 2.8} Z`}
+                fill="#0f766e"
+                opacity={0.85}
+              >
+                <title>{`Support: ${s.kind}`}</title>
+              </path>
+            );
+          })}
+
+          {project.loads.map((l) => {
+            if (!l.nodeId || l.kind !== 'pointForce') return null;
+            const p = nodePos.get(l.nodeId);
+            if (!p) return null;
+            const fx = l.components?.x?.value ?? 0;
+            const fz = l.components?.z?.value ?? 0;
+            const mag = Math.hypot(fx, fz);
+            if (mag === 0) return null;
+            const len = u * 0.06;
+            const ex = sx(p) + (fx / mag) * len;
+            const ey = sy(p) - (fz / mag) * len;
+            return (
+              <g key={l.id}>
+                <line x1={sx(p)} y1={sy(p)} x2={ex} y2={ey} stroke="#7c3aed" strokeWidth={lineW * 1.4} />
+                <circle cx={ex} cy={ey} r={nodeR * 0.5} fill="#7c3aed">
+                  <title>{l.name}</title>
+                </circle>
+              </g>
+            );
+          })}
+
           {scene.nodes.map((n) => {
             const on = selected?.kind === 'node' && selected.id === n.id;
             const isPending = pending === n.id;
@@ -364,6 +401,10 @@ export function EditorCanvas() {
       )}
 
       <p className="note editor-selection" role="status">Selected: {selectionText}</p>
+
+      {editable && (
+        <FixtureInspector project={project} setProject={setProject} selection={selected} unitSystem={unitSystem} />
+      )}
     </div>
   );
 }

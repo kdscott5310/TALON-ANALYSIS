@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6E",
+  "activePackage": "6F",
   "baseline": {
-    "tests": 365,
+    "tests": 374,
     "phaseStartTests": 334,
-    "testFiles": 25,
+    "testFiles": 26,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -86,13 +86,21 @@
         {
           "id": "6E",
           "title": "Supports, constraints & loads",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 374,
+          "artifacts": [
+            "src/core/projectEdits.ts (supports/constraints/loads/cases/combinations)",
+            "src/components/FixtureInspector.tsx",
+            "src/components/EditorCanvas.tsx (inspector + glyphs)",
+            "src/tests/projectSupportsLoads.test.ts"
+          ],
           "dependsOn": ["6D"]
         },
         {
           "id": "6F",
           "title": "Property inspector & provenance",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6D"]
         },
         {

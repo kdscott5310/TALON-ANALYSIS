@@ -215,3 +215,22 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .editor-canvas:active { cursor: grabbing; }
 .editor-selection { font-variant-numeric: tabular-nums; }
 @media (max-width: 900px) { .editor-canvas { height: 320px; } }
+
+/* ── M6E: inspector ── */
+.inspector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.inspector fieldset { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin: 0 0 8px; }
+.inspector legend { font-size: 0.8rem; font-weight: 600; padding: 0 4px; }
+.inspector h3 { margin: 0 0 6px; font-size: 0.9rem; }
+.inspector-field { display: inline-flex; flex-direction: column; font-size: 0.78rem; gap: 2px; margin-right: 8px; }
+.inspector-field input, .inspector-field select { padding: 3px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.82rem; max-width: 120px; }
+.inspector-dof { display: flex; gap: 12px; font-size: 0.78rem; margin: 6px 0; flex-wrap: wrap; }
+.inspector-actions { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.inspector-actions button { padding: 4px 10px; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+.inspector-actions button:disabled { background: #e2e8f0; color: #94a3b8; border-color: var(--line); cursor: not-allowed; }
+.inspector-list { list-style: none; margin: 4px 0; padding: 0; font-size: 0.78rem; }
+.inspector-list li { padding: 2px 0; }
+.inspector-checks { display: flex; flex-direction: column; gap: 2px; font-size: 0.78rem; max-height: 120px; overflow-y: auto; margin: 4px 0; }
+.inspector-create { flex-direction: column; align-items: stretch; }
+.inspector-create input[type=text] { padding: 3px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.82rem; }
+.link-btn { border: none; background: none; color: var(--accent); cursor: pointer; font-size: 0.75rem; margin-left: 6px; padding: 0; text-decoration: underline; }
+@media (max-width: 900px) { .inspector { grid-template-columns: 1fr; } }
