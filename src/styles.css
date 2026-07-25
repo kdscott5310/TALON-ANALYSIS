@@ -201,3 +201,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .template-card button:disabled { border-color: var(--line); background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
 .badge-ok { background: var(--ok); color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
 .badge-locked { color: #64748b; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+
+/* ── M6C: editor canvas ── */
+.editor-canvas-wrap { display: flex; flex-direction: column; gap: 6px; }
+.editor-toolbar { display: flex; align-items: center; gap: 6px; }
+.editor-toolbar-gap { flex: 1; }
+.editor-toolbar button { padding: 3px 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 4px; cursor: pointer; font-size: 0.82rem; min-width: 34px; }
+.editor-toolbar button:hover { border-color: var(--accent); }
+.editor-canvas { width: 100%; height: 460px; border: 1px solid var(--line); border-radius: 6px; background: #fbfdff; touch-action: none; cursor: grab; }
+.editor-canvas:active { cursor: grabbing; }
+.editor-selection { font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) { .editor-canvas { height: 320px; } }

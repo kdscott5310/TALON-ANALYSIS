@@ -13,6 +13,7 @@
 import { useProjectStore } from '../state/projectStore';
 import { isVerified, type VerificationState } from '../core/provenance';
 import { TemplateGallery } from './TemplateGallery';
+import { EditorCanvas } from './EditorCanvas';
 
 const STATE_LABEL: Record<VerificationState, string> = {
   manufacturerVerified: 'Manufacturer verified',
@@ -111,6 +112,16 @@ export function FixtureEditor() {
           </tbody>
         </table>
         {project.description && <p className="note">{project.description}</p>}
+      </section>
+
+      <section className="results-panel">
+        <h2>Model geometry — 2D elevation</h2>
+        <p className="note">
+          Read-only view of the project's nodes and elements. Drag to pan, scroll
+          to zoom, click a node or element to inspect it. Editing arrives in a
+          later work package.
+        </p>
+        <EditorCanvas />
       </section>
 
       <section className="results-panel no-print">

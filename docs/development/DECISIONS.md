@@ -15,6 +15,26 @@ Format:
 
 ---
 
+## D-006 — 6C canvas splits a pure mapping from an interactive SVG  (2026-07-24, 6C)
+
+**Decision.** The 2D editor is two parts: `src/visualizations/editorScene.ts`
+(pure `buildEditorScene(project)` → world-space nodes/edges/attachments/frames/
+bounds) and `src/components/EditorCanvas.tsx` (SVG rendering, pan/zoom/grid,
+selection). The plane is the global **x–z elevation** (x downrange horizontal,
+z up vertical); global y is dropped (CUFTS is planar until M11). SVG draws z as
+`-z` so up is up. World→screen uses a `viewBox`; marks are sized proportionally
+to `viewBox.w` so they stay legible at any zoom.
+
+**Why.** Rule 2/7: all model→geometry logic lives in the pure, unit-tested
+module (`editorScene.test.ts` traces every output to node positions / element
+node refs / frames); the component adds no engineering or geometry math beyond
+screen mapping. Mirrors the existing `visualizations/sceneData.ts` boundary.
+
+**Consequences.** 6C is read-only — selection is visual state only, no mutation.
+Future (export-only) element types are flagged `future` and drawn dashed
+(Rule 11). 6D adds editing on top of the same store + mapping. Added
+`.editor-canvas`/`.editor-toolbar` styles.
+
 ## D-005 — 6B creates projects through the registry gate  (2026-07-24, 6B)
 
 **Decision.** New-project creation goes through `instantiateTemplate` (via a thin

@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6C",
+  "activePackage": "6D",
   "baseline": {
-    "tests": 349,
+    "tests": 356,
     "phaseStartTests": 334,
-    "testFiles": 23,
+    "testFiles": 24,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -56,13 +56,20 @@
         {
           "id": "6C",
           "title": "Canvas foundation",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 356,
+          "artifacts": [
+            "src/visualizations/editorScene.ts",
+            "src/components/EditorCanvas.tsx",
+            "src/tests/editorScene.test.ts"
+          ],
           "dependsOn": ["6A"]
         },
         {
           "id": "6D",
           "title": "Node & element editing",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6C"]
         },
         {
