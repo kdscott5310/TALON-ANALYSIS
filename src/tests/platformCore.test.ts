@@ -439,8 +439,8 @@ describe('immutable analysis runs (Rule 9)', () => {
 describe('fixture template registry (Rule 11 — no claimed capability)', () => {
   it('declares the full catalogue with honest status', () => {
     expect(FIXTURE_TEMPLATES.length).toBeGreaterThanOrEqual(12);
-    expect(implementedTemplates().map((t) => t.id)).toEqual(['cufts']);
-    expect(plannedTemplates().length).toBeGreaterThanOrEqual(11);
+    expect(implementedTemplates().map((t) => t.id)).toEqual(['cufts', 'customNodeElement']);
+    expect(plannedTemplates().length).toBeGreaterThanOrEqual(10);
     for (const t of plannedTemplates()) {
       expect(t.milestone).toMatch(/^M\d+/);
     }

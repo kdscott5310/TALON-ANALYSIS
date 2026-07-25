@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6D",
+  "activePackage": "6E",
   "baseline": {
-    "tests": 356,
+    "tests": 365,
     "phaseStartTests": 334,
-    "testFiles": 24,
+    "testFiles": 25,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -69,13 +69,24 @@
         {
           "id": "6D",
           "title": "Node & element editing",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 365,
+          "artifacts": [
+            "src/core/templates/custom.ts",
+            "src/core/projectEdits.ts",
+            "src/core/projectSerialization.ts (adoptCustomProject)",
+            "src/core/templates/registry.ts (customNodeElement implemented)",
+            "src/components/EditorCanvas.tsx (editing)",
+            "src/tests/projectEdits.test.ts"
+          ],
+          "note": "Resolved via authoritative-geometry custom project type (D-007).",
           "dependsOn": ["6C"]
         },
         {
           "id": "6E",
           "title": "Supports, constraints & loads",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6D"]
         },
         {

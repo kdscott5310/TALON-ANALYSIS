@@ -136,9 +136,11 @@ export const FIXTURE_TEMPLATES: readonly FixtureTemplateInfo[] = [
   {
     id: 'customNodeElement',
     name: 'Custom node-and-element project',
-    description: 'Free-form model built directly from nodes and elements.',
-    status: 'planned',
-    milestone: 'M17',
+    description:
+      'Free-form model built directly from nodes and elements. Geometry is ' +
+      'authoritative (not derived from a scenario), so it is fully editable.',
+    status: 'implemented',
+    milestone: 'M6',
     dataVersion: 1,
   },
   {

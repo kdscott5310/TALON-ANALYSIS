@@ -197,9 +197,75 @@ function adoptProject(raw: Record<string, unknown>): ProjectImportResult {
     return { ok: true, project: rebuilt, migrationNotes: notes };
   }
 
+  // Custom projects carry authoritative geometry — nodes and elements ARE the
+  // model, so they are adopted as-is (never re-derived) and edits round-trip.
+  if (template.id === 'customNodeElement') {
+    return adoptCustomProject(raw, version);
+  }
+
   errors.push(
     `Unsupported project template "${template.id}". This build provides the ` +
-      "'cufts' template; generic templates arrive in a later milestone.",
+      "'cufts' and 'customNodeElement' templates.",
   );
   return { ok: false, errors };
+}
+
+/**
+ * Adopts a custom (authoritative-geometry) project. The geometry is trusted
+ * as-is after defaulting optional collections; referential integrity is then
+ * enforced so a corrupt or hand-edited file cannot smuggle dangling references.
+ */
+function adoptCustomProject(raw: Record<string, unknown>, version: number): ProjectImportResult {
+  for (const key of ['coordinateSystems', 'nodes', 'elements'] as const) {
+    if (!Array.isArray(raw[key])) {
+      return { ok: false, errors: [`Custom project is missing its "${key}" array.`] };
+    }
+  }
+
+  const p = raw as unknown as Project;
+  const project: Project = {
+    ...p,
+    schemaVersion: PROJECT_SCHEMA_VERSION,
+    templateData: {},
+    name: typeof p.name === 'string' && p.name.trim() ? p.name : 'Custom project',
+    createdOn: typeof p.createdOn === 'string' ? p.createdOn : new Date().toISOString(),
+    revision: typeof p.revision === 'string' ? p.revision : '1',
+    identity: p.identity ?? {},
+    materials: p.materials ?? [],
+    components: p.components ?? [],
+    supports: p.supports ?? [],
+    constraints: p.constraints ?? [],
+    loads: p.loads ?? [],
+    loadCases: p.loadCases ?? [],
+    loadCombinations: p.loadCombinations ?? [],
+    movingBodies: p.movingBodies ?? [],
+    analysisCases: p.analysisCases ?? [],
+    analysisRuns: p.analysisRuns ?? [],
+    risks: p.risks ?? [],
+    assumptions: p.assumptions ?? [],
+    testData: p.testData ?? [],
+    reports: p.reports ?? [],
+    bom: p.bom ?? [],
+    revisions: p.revisions ?? [],
+    verification: p.verification ?? {
+      overallState: 'provisional',
+      outstanding: [],
+      reviewStatus: 'draft',
+      engineerReviewed: false,
+    },
+  };
+
+  const notes: string[] = [];
+  if (version < PROJECT_SCHEMA_VERSION) {
+    notes.push(`Migrated custom project schema v${version} → v${PROJECT_SCHEMA_VERSION}.`);
+  }
+
+  const integrity = checkProjectIntegrity(project);
+  if (integrity.some((i) => i.severity === 'error')) {
+    return {
+      ok: false,
+      errors: integrity.filter((i) => i.severity === 'error').map((i) => `${i.entity}: ${i.message}`),
+    };
+  }
+  return { ok: true, project, migrationNotes: notes };
 }

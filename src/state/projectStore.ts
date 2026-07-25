@@ -19,8 +19,9 @@
  */
 import { create } from 'zustand';
 import type { Project } from '../core/model';
-// Importing the CUFTS template registers its builder with the registry.
+// Importing the templates registers their builders with the registry.
 import { buildCuftsProject } from '../core/templates/cufts';
+import '../core/templates/custom';
 import { instantiateTemplate, type FixtureTemplateId } from '../core/templates/registry';
 import {
   exportProjectJson as serializeProject,

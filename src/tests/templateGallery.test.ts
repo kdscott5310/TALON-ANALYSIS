@@ -54,9 +54,9 @@ afterEach(() => {
 });
 
 describe('template gallery — catalogue', () => {
-  it('lists CUFTS as the only implemented template and several planned ones', () => {
+  it('lists the implemented templates (CUFTS + custom) and several planned ones', () => {
     const impl = implementedTemplates();
-    expect(impl.map((t) => t.id)).toEqual(['cufts']);
+    expect(impl.map((t) => t.id)).toEqual(['cufts', 'customNodeElement']);
     expect(plannedTemplates().length).toBeGreaterThan(0);
     // Every planned template carries the milestone that will deliver it.
     for (const t of plannedTemplates()) {

@@ -15,6 +15,40 @@ Format:
 
 ---
 
+## D-007 — 6D adds an authoritative-geometry "custom" project type  (2026-07-24, 6D)
+
+**Decision.** Rather than editing CUFTS geometry (which is projected from its
+scenario and re-derived on load — edits would be discarded), 6D introduces a
+**custom** project whose nodes/elements ARE the model. Editing is gated to
+custom projects; CUFTS stays read-only/derived. (User-selected option, over
+edit-back-to-scenario.)
+
+**Implementation.**
+- `core/templates/registry.ts`: `customNodeElement` promoted `planned → implemented`
+  (milestone M6); its builder ignores the scenario arg.
+- `core/templates/custom.ts` (new): `createCustomProject` (global frame + two
+  starter nodes, provisional/uncertified) + `isCustomProject`; registers the
+  builder. Reachable from the 6B gallery as "Available".
+- `core/projectEdits.ts` (new): pure immutable `addNode`/`moveNode`/`deleteNode`/
+  `addElement`/`deleteElement`; `deleteNode` cascades to dependent elements,
+  supports, constraints, loads, and moving bodies so integrity holds.
+- `core/projectSerialization.ts`: `adoptCustomProject` adopts custom geometry
+  **as-is** (defaults optional collections, enforces `checkProjectIntegrity`) —
+  no re-derivation, so edits round-trip losslessly.
+- `EditorCanvas.tsx`: Select/Add/Connect/Delete modes, node drag-move, 1 m grid
+  snapping, and a live length readout in the active unit system; edits commit
+  through `setProject`.
+
+**Why core edits were justified.** The chosen approach *requires* a
+non-re-deriving serialization path; without it edits can't persist (Rule 10).
+Change is additive and does not touch CUFTS behavior — verified by the
+unchanged generalizedModel/platformCore CUFTS regression tests.
+
+**Consequences.** Two existing template-catalogue tests updated to expect
+`['cufts','customNodeElement']` implemented. Editing creates cables only for
+now; other two-node element types and supports/loads editing are 6E+. Browser-
+verified add/connect/delete/move persist across reload.
+
 ## D-006 — 6C canvas splits a pure mapping from an interactive SVG  (2026-07-24, 6C)
 
 **Decision.** The 2D editor is two parts: `src/visualizations/editorScene.ts`

@@ -1,90 +1,78 @@
 # Current Task
 
-> **Active package: `6D` — Node & element editing**
-> This is the *only* active work package. Do not start 6E or anything later.
-> When 6D is complete and merged, advance this file and `status.json` to 6E.
+> **Active package: `6E` — Supports, constraints & loads**
+> This is the *only* active work package. Do not start 6F or anything later.
+> When 6E is complete and merged, advance this file and `status.json` to 6F.
 
 ## Previously completed
 
-- **6A — Project store & app shell — DONE.**
-- **6B — Template gallery & new-project flow — DONE.**
-- **6C — Canvas foundation — DONE (2026-07-24).**
-  `src/visualizations/editorScene.ts` (pure `buildEditorScene` →
-  nodes/edges/attachments/frames/bounds) + `src/components/EditorCanvas.tsx`
-  (SVG pan/zoom/grid, coordinate-frame markers, read-only selection). 356 tests
-  pass, build clean, browser-verified (5 nodes / 3 elements / 3 attachments,
-  node+element selection, zoom/pan, no console errors). See `DECISIONS.md`
-  D-006.
+- **6A** — Project store & app shell.
+- **6B** — Template gallery & new-project flow.
+- **6C** — Canvas foundation (read-only 2D view).
+- **6D — Node & element editing — DONE (2026-07-24).** Introduced an
+  authoritative-geometry **custom** project (`core/templates/custom.ts`,
+  `customNodeElement` now implemented) whose edits round-trip losslessly; pure
+  `core/projectEdits.ts` (add/move/delete nodes & elements with integrity
+  cascades); `adoptCustomProject` serialization path; canvas editing
+  (Select/Add/Connect/Delete, drag-move, 1 m snap, live length readout). 365
+  tests pass, browser-verified add/connect/delete/move persist across reload.
+  See `DECISIONS.md` D-007.
 
-## Objective (6D)
+## Objective (6E)
 
-Make the canvas **editable**: add / move / delete nodes, and create / delete
-two-node elements, committing every change immutably through the project store.
-Add grid/endpoint snapping and a live dimension readout, with lengths shown in
-the active unit system.
-
-## ⚠️ Key design tension — resolve this first
-
-Only the **CUFTS** template is implemented, and its geometry is **projected from
-the authoritative `templateData.cufts` scenario** by `buildCuftsProject`. On
-reload, `adoptProject` **re-derives** nodes/elements from that scenario, so
-**raw node/element edits on a CUFTS project will not round-trip** — they are
-overwritten. Decide and record (in `DECISIONS.md`) one of:
-
-1. **Edit-back-to-scenario** for CUFTS (map canvas edits to scenario fields;
-   only the fields the scenario exposes are editable), or
-2. **Editable custom projects only** — introduce a non-CUFTS "custom" project
-   whose nodes/elements are authoritative (no scenario re-derivation), and gate
-   free editing to those; CUFTS geometry stays read-only/derived.
-
-Option 2 is the cleaner long-term seam (it also unblocks the planned
-`customNodeElement` template) but is more work; option 1 keeps everything CUFTS.
-Pick deliberately — do not silently let edits be discarded on reload (Rule 10).
+Extend editing on **custom** projects to boundary conditions and loading:
+assign **supports** and **constraints** to nodes, and define **loads**, **load
+cases**, and user **load combinations** — all committed immutably through the
+store, keeping `checkProjectIntegrity` green.
 
 ## In scope
 
-1. Canvas interactions to add a node, drag a node to move it, and delete a
-   selected node/element.
-2. Create a two-node element between two selected nodes; delete an element.
-3. Grid + endpoint snapping; live dimension readout (segment length, node
-   coordinates) in the active unit system via `units/units.ts`.
-4. All mutations go through an immutable store update; the resulting `Project`
-   passes `checkProjectIntegrity` (no dangling references).
-5. Tests per `TEST_REQUIREMENTS.md` §6D.
+1. Assign/edit/remove a **support** on a selected node (kind: fixed / pinned /
+   roller / spring / prescribed; restrained DOF mask; frame-tagged).
+2. Assign/remove **constraints** referencing nodes (and a path element where
+   relevant).
+3. Define **loads** (point force, gravity, wind, pretension, brake, …) on a
+   node or element, with frame-tagged components in the active unit system.
+4. Group loads into **load cases**, and load cases into user **load
+   combinations** — **no hard-coded building-code factors** (record a standard
+   only if the user explicitly selects one).
+5. Show these on the canvas and/or an inspector list; deletion cascades so
+   integrity holds (reuse/extend `core/projectEdits.ts`).
+6. Tests per `TEST_REQUIREMENTS.md` §6E.
 
 ## Out of scope
 
-- Supports / constraints / loads editing (6E), property inspector (6F).
-- Solver runs / result overlays / badges (6G), migration (6H).
-- Editing single-node element internals beyond placement.
+- Free-form dimensioned property editing of arbitrary quantities (6F —
+  property inspector & provenance).
+- Solver runs / result badges (6G); migration of v1 scenarios (6H).
+- Editing supports/loads on CUFTS projects (they stay derived/read-only).
 
 ## Files to read (only these)
 
-- `src/visualizations/editorScene.ts`, `src/components/EditorCanvas.tsx` — the
-  6C canvas + mapping to extend.
-- `src/state/projectStore.ts` — `setProject` (immutable commit path).
-- `src/core/model.ts` — `Project`, `checkProjectIntegrity`.
-- `src/core/coordinates.ts`, `src/core/elements.ts` — node/element shapes.
-- `src/core/templates/cufts.ts`, `src/core/projectSerialization.ts` — to
-  understand the CUFTS re-derivation tension above.
-- `src/units/units.ts` — unit conversion for the dimension readout.
+- `src/core/projectEdits.ts` — extend with support/constraint/load operations
+  (keep them pure + immutable + integrity-preserving).
+- `src/core/model.ts` — `Support`, `Constraint`, `Load`, `LoadCase`,
+  `LoadCombination`, `checkProjectIntegrity`.
+- `src/core/coordinates.ts` — frames / DOF; `src/core/provenance.ts` — `Quantity`.
+- `src/components/EditorCanvas.tsx` / `FixtureEditor.tsx` — where to surface the
+  new controls; `src/state/projectStore.ts` — `setProject` commit path.
+- `src/units/units.ts` — unit display for load magnitudes.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` pass (≥ 356 + new 6D tests).
-- Add/move/delete of nodes and create/delete of elements yield a `Project` that
-  passes `checkProjectIntegrity`; edits are immutable (prior reference
-  unchanged).
-- Edits **persist across reload** per the chosen resolution above (not silently
-  discarded).
-- Dimensions display via `units/units.ts` (no ad-hoc math in components).
-- v1 tabs and 6A–6C behavior unchanged; no `src/calculations/` changes;
-  `src/core/` changes only if strictly required and recorded.
+- `npm run build` and `npm test` pass (≥ 365 + new 6E tests).
+- Supports/constraints/loads/cases/combinations persist on the custom Project
+  and survive reload; every edit keeps `checkProjectIntegrity` clean.
+- Load combinations are user-defined only — no assumed code factors; vectors
+  state their coordinate frame.
+- No engineering math in UI (Rules 2/7); no `src/calculations/` changes;
+  `src/core/` changes additive and recorded.
+- CUFTS + earlier packages unchanged.
 
 ## Definition of done
 
-1. Design tension resolved and recorded in `DECISIONS.md`.
-2. Code + tests implemented within scope.
-3. `npm test` and `npm run build` green.
-4. `status.json` and this file advanced to mark 6D DONE and 6E ACTIVE.
-5. Change committed as a single package-scoped commit.
+1. Code + tests within scope.
+2. `npm test` and `npm run build` green.
+3. Decisions recorded in `DECISIONS.md`.
+4. `status.json` and this file advanced to mark 6E DONE and 6F ACTIVE.
+5. Single package-scoped commit.
