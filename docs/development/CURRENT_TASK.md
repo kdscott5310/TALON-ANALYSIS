@@ -1,80 +1,77 @@
 # Current Task
 
-> **Active package: `6A` — Project store & app shell**
-> This is the *only* active work package. Do not start 6B or anything later.
-> When 6A is complete and merged, advance this file and `status.json` to 6B.
+> **Active package: `6B` — Template gallery & new-project flow**
+> This is the *only* active work package. Do not start 6C or anything later.
+> When 6B is complete and merged, advance this file and `status.json` to the
+> next package.
 
-## Objective
+## Previously completed
 
-Introduce a `Project`-model-backed Zustand store **alongside** the existing v1
-scenario store, able to hold, persist, and reload a `core/model.ts` `Project`,
-and mount a minimal read-only "Fixture Editor" surface that displays the loaded
-Project. No geometry editing, no template picker UI, no solver runs yet.
+- **6A — Project store & app shell — DONE (2026-07-24).** Added
+  `src/state/projectStore.ts` (Project-backed Zustand store, dedicated
+  `talon-project-v1` key, persist via `exportProjectJson` / recover via
+  `importProjectJson` with visible notices) and a read-only "Fixture Editor"
+  tab (`src/components/FixtureEditor.tsx`). 343 tests pass, build clean,
+  browser-verified with no console errors. See `DECISIONS.md` D-002/D-004.
 
-This is the foundation the whole M6 editor sits on. Keep it small and correct.
+## Objective (6B)
 
-## Why this first
+Let the user instantiate a `Project` from the fixture-template registry. Add a
+template gallery that lists all templates from `core/templates/registry.ts` with
+**CUFTS enabled and every other template visibly locked**; selecting CUFTS
+creates a Project (via the template) into the 6A project store.
 
-The shipping UI runs on the flat v1 `Scenario` model; the generalized `Project`
-model is built and tested but headless (see
-`docs/architecture/CURRENT_ARCHITECTURE.md`). 6A is the seam that lets every
-later package (6B–6H, and the M7 stores) build on a real Project at runtime,
-without touching the validated v1 UI or its locked results.
+## Why this next
+
+6A gave us a single seeded Project. 6B makes project creation explicit and
+honest: the registry already refuses unimplemented templates
+(`instantiateTemplate` throws), so the UI must present locked templates as
+locked — never imply a capability TALON does not have (Rule 8/11).
 
 ## In scope
 
-1. `src/state/projectStore.ts` — Zustand store that:
-   - holds one active `Project` (plus room to grow to a library later),
-   - seeds an initial Project from the CUFTS template
-     (`core/templates/cufts.ts`) when storage is empty,
-   - persists to localStorage under a **new** key (do not collide with
-     `talon-cufts-scenarios-v1`),
-   - on load, validates via `core/projectSerialization.ts`; drops corrupt data
-     with a **visible notice** and recovers — never a silent default (Rule 10,
-     mirror the recovery pattern in `state/store.ts`).
-2. A minimal shell surface (new tab in `App.tsx`, e.g. "Fixture Editor") that
-   reads the store and shows the Project's identity/metadata read-only.
-3. Tests under `src/tests/` (see below).
+1. A template gallery component listing `FIXTURE_TEMPLATES`, each showing name,
+   description, status (implemented/planned), and target milestone.
+2. Only `implemented` templates are selectable; `planned` templates render
+   disabled with their milestone, and cannot create a Project.
+3. Selecting CUFTS calls `instantiateTemplate('cufts', exampleScenario, …)` (or
+   `buildCuftsProject`) and loads the result into the project store via
+   `setProject`.
+4. Surface it from the Fixture Editor tab (e.g. a "New from template" control).
+5. Tests per `TEST_REQUIREMENTS.md` §6B.
 
 ## Out of scope (do not build now)
 
-- Canvas / pan-zoom / rendering nodes (6C).
-- Any node/element/support/load editing (6D–6E).
-- Template gallery UI (6B) — 6A just seeds CUFTS directly.
-- Property inspector (6F), solver runs or badges (6G), migration of v1
-  scenarios into Projects (6H).
+- Canvas / rendering nodes (6C) and any geometry editing (6D–6E).
+- Property inspector (6F), solver runs / badges (6G).
+- Migrating existing v1 scenarios into Projects (6H).
+- Custom or user-saved templates (planned; stay locked).
 
 ## Files to read (only these)
 
-- `src/core/model.ts` — Project shape + integrity check.
-- `src/core/projectSerialization.ts` — Project (de)serialization + validation.
-- `src/core/templates/cufts.ts` and `core/templates/registry.ts` — how to build
-  a CUFTS Project.
-- `src/state/store.ts` — the persistence + recovery pattern to mirror.
-- `src/App.tsx` — where to mount the new tab.
+- `src/core/templates/registry.ts` — `FIXTURE_TEMPLATES`, `instantiateTemplate`,
+  `implementedTemplates` / `plannedTemplates`.
+- `src/core/templates/cufts.ts` — `buildCuftsProject`.
+- `src/state/projectStore.ts` — `setProject`, `seedExampleProject`.
+- `src/components/FixtureEditor.tsx` — where to mount the gallery.
+- `src/models/exampleScenario.ts` — the CUFTS seed scenario.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` both pass.
-- Existing v1 tabs and their behavior are **unchanged**.
-- A Project is created from CUFTS, persisted, and survives a page refresh.
-- Corrupt persisted Project data recovers with a visible notice, not a silent
-  default; missing data is never coerced to 0.
-- No engineering math added to UI/store code (Rule 2/7).
-- No changes under `src/calculations/`; changes under `src/core/` only if
-  strictly required (prefer none) and recorded in `DECISIONS.md`.
-
-## Test requirements (6A)
-
-Add `src/tests/projectStore.test.ts` covering: seed-from-CUFTS when storage
-empty; persist → reload round-trip; corrupt-data recovery emits a notice and
-falls back; the v1 scenario store is unaffected. See
-`docs/development/TEST_REQUIREMENTS.md` §6A.
+- `npm run build` and `npm test` both pass (≥ 343 + new 6B tests).
+- Only implemented templates can create a Project; a locked template cannot
+  (the registry throw is prevented in the UI, not swallowed after the fact).
+- Creating CUFTS produces a Project matching the template definition, loaded
+  into the store.
+- Existing v1 tabs and 6A behavior unchanged.
+- No engineering math in UI code (Rule 2/7); no changes under
+  `src/calculations/`; `src/core/` unchanged unless strictly required (record
+  in `DECISIONS.md`).
 
 ## Definition of done
 
 1. Code + tests implemented within scope.
-2. `npm test` green (≥ 334 + new 6A tests), `npm run build` green.
+2. `npm test` and `npm run build` green.
 3. Decisions recorded in `DECISIONS.md`.
-4. `status.json` and this file advanced to mark 6A DONE and 6B ACTIVE.
+4. `status.json` and this file advanced to mark 6B DONE and 6C ACTIVE.
 5. Change committed as a single package-scoped commit.

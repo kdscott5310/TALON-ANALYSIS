@@ -13,7 +13,15 @@ import { exampleScenario } from '../models/exampleScenario';
 import { migrateScenario } from '../models/scenarioSerialization';
 import type { UnitSystem } from '../units/units';
 
-export type WorkflowTab = 'setup' | 'static' | 'dynamic' | 'visual3d' | 'compare' | 'report' | 'validation';
+export type WorkflowTab =
+  | 'setup'
+  | 'static'
+  | 'dynamic'
+  | 'visual3d'
+  | 'compare'
+  | 'report'
+  | 'validation'
+  | 'editor';
 
 export interface StoredScenario {
   id: string;

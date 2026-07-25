@@ -15,6 +15,26 @@ Format:
 
 ---
 
+## D-004 — 6A persistence reuses the validated serialization path  (2026-07-24, 6A)
+
+**Decision.** The project store (`src/state/projectStore.ts`) persists by writing
+`exportProjectJson(project)` and loads by running `importProjectJson(raw)` —
+the same tested path used for file import. Storage uses a dedicated key
+`talon-project-v1`. A read-only "Fixture Editor" tab was added by extending the
+v1 store's `WorkflowTab` union with `'editor'` (navigation only).
+
+**Why.** Routing load through `importProjectJson` means corrupt or hand-edited
+saved data is re-validated and re-derived from the CUFTS scenario on every load,
+so recovery is honest (visible notice, never a silent default — Rule 10) and
+missing quantities stay `null` (Rule 4). Reusing the serializer avoids a second,
+divergent persistence format.
+
+**Consequences.** Reloading a freshly seeded project re-derives it
+deterministically (ids/timestamps preserved), so the round-trip is lossless and
+`toEqual`-stable — asserted in `src/tests/projectStore.test.ts`. The store
+exposes only an immutable `setProject`, `resetToExampleProject`, and
+`toProjectJson`; graphical editing is deferred to 6C+.
+
 ## D-003 — Split M6/M7 into lettered work packages  (2026-07-24, docs)
 
 **Decision.** M6 (generalized platform + graphical fixture editor) is divided

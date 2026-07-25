@@ -12,6 +12,7 @@ import { RegistersPanel } from './components/RegistersPanel';
 import { CompareView } from './components/CompareView';
 import { ReportView } from './components/ReportView';
 import { ValidationView } from './components/ValidationView';
+import { FixtureEditor } from './components/FixtureEditor';
 import { DISCLAIMER } from './models/scenario';
 
 // The 3D view pulls in Three.js; lazy-load so it stays out of the main bundle.
@@ -27,6 +28,7 @@ const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'compare', label: 'Compare' },
   { id: 'report', label: 'Report' },
   { id: 'validation', label: 'Validation' },
+  { id: 'editor', label: 'Fixture Editor' },
 ];
 
 export default function App() {
@@ -155,6 +157,8 @@ export default function App() {
       )}
 
       {activeTab === 'validation' && <ValidationView />}
+
+      {activeTab === 'editor' && <FixtureEditor />}
 
       <footer className="disclaimer no-print">{DISCLAIMER}</footer>
     </div>

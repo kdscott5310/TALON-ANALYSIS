@@ -2,10 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6A",
+  "activePackage": "6B",
   "baseline": {
-    "tests": 334,
-    "testFiles": 21,
+    "tests": 343,
+    "phaseStartTests": 334,
+    "testFiles": 22,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -28,14 +29,21 @@
         {
           "id": "6A",
           "title": "Project store & app shell",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 343,
+          "artifacts": [
+            "src/state/projectStore.ts",
+            "src/components/FixtureEditor.tsx",
+            "src/tests/projectStore.test.ts"
+          ],
           "dependsOn": [],
           "blocks": ["6B", "6C", "6D", "6E", "6F", "6G", "6H"]
         },
         {
           "id": "6B",
           "title": "Template gallery & new-project flow",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6A"]
         },
         {
