@@ -15,6 +15,25 @@ Format:
 
 ---
 
+## D-005 — 6B creates projects through the registry gate  (2026-07-24, 6B)
+
+**Decision.** New-project creation goes through `instantiateTemplate` (via a thin
+`newProjectFromTemplate` helper + a `createFromTemplate` store action). The
+`TemplateGallery` component renders every `FIXTURE_TEMPLATES` entry but enables
+only `status: 'implemented'` templates; planned templates render disabled with a
+lock badge and their delivering milestone.
+
+**Why.** The registry already refuses planned templates by throwing (Rule 8/11).
+Routing the UI through it — rather than hard-coding "CUFTS only" — means the
+gallery stays honest automatically as templates graduate, and the throw path is
+covered by tests instead of being bypassed. The example scenario seeds CUFTS;
+`instantiateTemplate` never reaches a builder for a planned id.
+
+**Consequences.** Creating a project replaces the active one (consistent with
+6A's reset). Added `.template-gallery`/`.template-card` styles and `.badge-ok`/
+`.badge-locked`. A failed create (planned id) throws without corrupting store
+state — asserted in `src/tests/templateGallery.test.ts`.
+
 ## D-004 — 6A persistence reuses the validated serialization path  (2026-07-24, 6A)
 
 **Decision.** The project store (`src/state/projectStore.ts`) persists by writing

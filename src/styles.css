@@ -189,3 +189,15 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .viz3d-canvas { width: 100%; height: 560px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #dfeaf4; }
 .viz3d-footer { padding: 4px 2px; }
 @media (max-width: 900px) { .viz3d-canvas { height: 380px; } }
+
+/* ── M6B: fixture-template gallery ── */
+.template-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 8px; }
+.template-card { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: #fbfdff; }
+.template-card.locked { background: #f4f6f8; border-style: dashed; }
+.template-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.template-card p { margin: 0; flex: 1; }
+.template-card button { align-self: flex-start; padding: 4px 12px; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.82rem; }
+.template-card button:hover:not(:disabled) { filter: brightness(1.1); }
+.template-card button:disabled { border-color: var(--line); background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+.badge-ok { background: var(--ok); color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.badge-locked { color: #64748b; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }

@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6B",
+  "activePackage": "6C",
   "baseline": {
-    "tests": 343,
+    "tests": 349,
     "phaseStartTests": 334,
-    "testFiles": 22,
+    "testFiles": 23,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -43,13 +43,20 @@
         {
           "id": "6B",
           "title": "Template gallery & new-project flow",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 349,
+          "artifacts": [
+            "src/components/TemplateGallery.tsx",
+            "src/state/projectStore.ts (createFromTemplate, newProjectFromTemplate)",
+            "src/tests/templateGallery.test.ts"
+          ],
           "dependsOn": ["6A"]
         },
         {
           "id": "6C",
           "title": "Canvas foundation",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6A"]
         },
         {

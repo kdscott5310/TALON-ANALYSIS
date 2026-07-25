@@ -19,7 +19,9 @@
  */
 import { create } from 'zustand';
 import type { Project } from '../core/model';
+// Importing the CUFTS template registers its builder with the registry.
 import { buildCuftsProject } from '../core/templates/cufts';
+import { instantiateTemplate, type FixtureTemplateId } from '../core/templates/registry';
 import {
   exportProjectJson as serializeProject,
   importProjectJson as parseProjectJson,
@@ -33,6 +35,18 @@ export const PROJECT_STORAGE_KEY = 'talon-project-v1';
 /** Builds a fresh CUFTS project from the built-in unverified example scenario. */
 export function seedExampleProject(): Project {
   return buildCuftsProject(exampleScenario);
+}
+
+/**
+ * Instantiates a project from an implemented fixture template (6B).
+ *
+ * The registry refuses any template that is not implemented — it throws rather
+ * than fabricating a fixture TALON cannot build (Rule 8/11). Only CUFTS is
+ * implemented in this build, and it is seeded from the v1 example scenario;
+ * `instantiateTemplate` never reaches the builder for a planned template.
+ */
+export function newProjectFromTemplate(id: FixtureTemplateId): Project {
+  return instantiateTemplate(id, exampleScenario);
 }
 
 export interface LoadedProject {
@@ -98,6 +112,8 @@ interface ProjectStoreState {
 
   /** Immutably replaces the active project and persists it. */
   setProject: (project: Project) => void;
+  /** Creates a new project from an implemented fixture template (6B). */
+  createFromTemplate: (id: FixtureTemplateId) => void;
   /** Re-seeds the built-in CUFTS example project. */
   resetToExampleProject: () => void;
   /** Serializes the active project to a downloadable JSON string. */
@@ -116,6 +132,12 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   setProject: (project) => {
     persistProject(project);
     set({ project });
+  },
+
+  createFromTemplate: (id) => {
+    const project = newProjectFromTemplate(id);
+    persistProject(project);
+    set({ project, notices: [] });
   },
 
   resetToExampleProject: () => {

@@ -12,6 +12,7 @@
  */
 import { useProjectStore } from '../state/projectStore';
 import { isVerified, type VerificationState } from '../core/provenance';
+import { TemplateGallery } from './TemplateGallery';
 
 const STATE_LABEL: Record<VerificationState, string> = {
   manufacturerVerified: 'Manufacturer verified',
@@ -36,6 +37,7 @@ export function FixtureEditor() {
   const notices = useProjectStore((s) => s.notices);
   const dismissNotices = useProjectStore((s) => s.dismissNotices);
   const resetToExampleProject = useProjectStore((s) => s.resetToExampleProject);
+  const createFromTemplate = useProjectStore((s) => s.createFromTemplate);
 
   const isExample = project.templateData.cufts?.isUnverifiedExample ?? false;
   const overall = project.verification.overallState;
@@ -109,6 +111,19 @@ export function FixtureEditor() {
           </tbody>
         </table>
         {project.description && <p className="note">{project.description}</p>}
+      </section>
+
+      <section className="results-panel no-print">
+        <details>
+          <summary>New project from a fixture template</summary>
+          <p className="note">
+            Only implemented templates can be created. Planned templates are
+            locked and show the milestone that delivers them — TALON never
+            offers a fixture it cannot build. Creating a project replaces the
+            one shown above.
+          </p>
+          <TemplateGallery onCreate={createFromTemplate} />
+        </details>
       </section>
 
       <section className="results-panel">
