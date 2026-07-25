@@ -1,0 +1,117 @@
+{
+  "project": "TALON-ANALYSIS",
+  "phase": "M6/M7 UI adoption + graphical fixture editor",
+  "updated": "2026-07-24",
+  "activePackage": "6A",
+  "baseline": {
+    "tests": 334,
+    "testFiles": 21,
+    "buildClean": true,
+    "productionAudit": 0,
+    "uiModel": "v1 Scenario (src/models)",
+    "targetModel": "Project (src/core/model.ts)"
+  },
+  "rules": {
+    "cuftsResultsLocked": true,
+    "solversReactFree": true,
+    "renderingCalcFree": true,
+    "siInternal": true,
+    "missingIsNotZero": true,
+    "unverifiedNeverCertified": true
+  },
+  "milestones": [
+    {
+      "id": "M6",
+      "title": "Generalized platform + graphical fixture editor",
+      "status": "in_progress",
+      "packages": [
+        {
+          "id": "6A",
+          "title": "Project store & app shell",
+          "status": "active",
+          "dependsOn": [],
+          "blocks": ["6B", "6C", "6D", "6E", "6F", "6G", "6H"]
+        },
+        {
+          "id": "6B",
+          "title": "Template gallery & new-project flow",
+          "status": "todo",
+          "dependsOn": ["6A"]
+        },
+        {
+          "id": "6C",
+          "title": "Canvas foundation",
+          "status": "todo",
+          "dependsOn": ["6A"]
+        },
+        {
+          "id": "6D",
+          "title": "Node & element editing",
+          "status": "todo",
+          "dependsOn": ["6C"]
+        },
+        {
+          "id": "6E",
+          "title": "Supports, constraints & loads",
+          "status": "todo",
+          "dependsOn": ["6D"]
+        },
+        {
+          "id": "6F",
+          "title": "Property inspector & provenance",
+          "status": "todo",
+          "dependsOn": ["6D"]
+        },
+        {
+          "id": "6G",
+          "title": "Analysis-run wiring & fidelity badges",
+          "status": "todo",
+          "dependsOn": ["6D"]
+        },
+        {
+          "id": "6H",
+          "title": "Serialization, migration & regression",
+          "status": "todo",
+          "dependsOn": ["6A", "6B", "6C", "6D", "6E", "6F", "6G"]
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Component library & procurement",
+      "status": "not_started",
+      "packages": [
+        {
+          "id": "7A",
+          "title": "Library store & browse",
+          "status": "todo",
+          "dependsOn": ["6A"]
+        },
+        {
+          "id": "7B",
+          "title": "Record & property editor with provenance",
+          "status": "todo",
+          "dependsOn": ["7A"]
+        },
+        {
+          "id": "7C",
+          "title": "Import/export & source adapters UI",
+          "status": "todo",
+          "dependsOn": ["7A"]
+        },
+        {
+          "id": "7D",
+          "title": "Sizing & candidate selection",
+          "status": "todo",
+          "dependsOn": ["7A", "6G"]
+        },
+        {
+          "id": "7E",
+          "title": "BOM & procurement sheet",
+          "status": "todo",
+          "dependsOn": ["7D"]
+        }
+      ]
+    }
+  ]
+}
