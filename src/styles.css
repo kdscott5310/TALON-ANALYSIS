@@ -245,4 +245,6 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .result-badge td:first-child { color: #55606b; width: 40%; }
 .result-badge .st-ok, .result-badge .st-caution, .result-badge .st-failed, .result-badge .st-insufficient { padding: 1px 6px; border-radius: 3px; font-weight: 600; }
 .run-header { font-size: 0.74rem; background: #f8fafc; border: 1px solid var(--line); border-radius: 4px; padding: 8px; overflow-x: auto; white-space: pre; }
+.file-import { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+.file-import input[type=file] { display: none; }
 @media (max-width: 900px) { .inspector { grid-template-columns: 1fr; } }

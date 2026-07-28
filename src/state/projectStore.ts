@@ -115,6 +115,8 @@ interface ProjectStoreState {
   setProject: (project: Project) => void;
   /** Creates a new project from an implemented fixture template (6B). */
   createFromTemplate: (id: FixtureTemplateId) => void;
+  /** Adopts an imported/migrated project and surfaces its notes (6H). */
+  applyImportedProject: (project: Project, notes: string[]) => void;
   /** Re-seeds the built-in CUFTS example project. */
   resetToExampleProject: () => void;
   /** Serializes the active project to a downloadable JSON string. */
@@ -139,6 +141,11 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     const project = newProjectFromTemplate(id);
     persistProject(project);
     set({ project, notices: [] });
+  },
+
+  applyImportedProject: (project, notes) => {
+    persistProject(project);
+    set({ project, notices: notes });
   },
 
   resetToExampleProject: () => {

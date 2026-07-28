@@ -15,6 +15,34 @@ Format:
 
 ---
 
+## D-011 — 6H closes M6: project file I/O, v1 migration, exact-equality regression  (2026-07-24, 6H)
+
+**Decision.** 6H adds project JSON export/import and v1-scenario migration in the
+editor (`ProjectFilePanel`), all through the validated `projectSerialization`
+path (`exportProjectJson`/`importProjectJson`/`projectFromScenario`) — no new
+core logic. `applyImportedProject` on the store adopts an imported/migrated
+project and surfaces its migration notes; malformed imports are rejected with a
+visible reason, never silently accepted (Rule 10).
+
+**Regression comparison note.** The v1 dynamics result caches derived
+interpolation FUNCTIONS on `path` (distinct closures per call), so a raw
+`toEqual` on two dynamics results fails by reference despite identical numbers.
+The regression therefore compares the **serializable** projection
+(`JSON.parse(JSON.stringify(...))`) for dynamics — the numbers that drive
+results, reports, and persistence — asserting bit-for-bit equality. Static and
+summary compare directly (no functions).
+
+**Headline guarantee proven.** `projectRegression.test.ts` takes the CUFTS
+scenario scenario → project → exported JSON → imported project → solved via the
+adapters, and asserts static (every swept position), dynamics, and the status
+summary equal the v1 solvers exactly — the generalized platform never changed a
+validated number (Rule 1 / release gate 17). **M6 is complete.**
+
+**Consequences.** No `src/calculations/` changes; the only store change is the
+additive `applyImportedProject`. Browser-verified: migrate v1 → cufts project,
+export downloads JSON, valid import succeeds, malformed import shows a visible
+error. Next phase: M7 (component library + procurement) starting at 7A.
+
 ## D-010 — 6G runs CUFTS through the badge contract; custom analysis deferred  (2026-07-24, 6G)
 
 **Decision (user-directed).** 6G wires analysis for **CUFTS projects only**:

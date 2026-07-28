@@ -7,12 +7,14 @@
  * 2/7) — it reads store state, drives the pure edit/run operations, and
  * presents their results.
  */
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useProjectStore } from '../state/projectStore';
 import { isVerified, type VerificationState } from '../core/provenance';
 import { runProjectAnalysis } from '../core/projectRun';
 import { describeRun, verifyRunIntegrity, type AnalysisRun } from '../core/analysisRun';
+import { importProjectJson, projectFromScenario } from '../core/projectSerialization';
 import type { Project } from '../core/model';
+import { useAppStore } from '../state/store';
 import { APP_VERSION } from '../version';
 import { TemplateGallery } from './TemplateGallery';
 import { EditorCanvas } from './EditorCanvas';
@@ -206,14 +208,106 @@ export function FixtureEditor() {
         )}
       </section>
 
+      <ProjectFilePanel />
+
       <section className="results-panel no-print">
         <button onClick={resetToExampleProject}>Reset to CUFTS example project</button>
-        <p className="note">
-          Re-seeds the built-in example project. In later packages this surface
-          becomes the graphical fixture editor.
-        </p>
+        <p className="note">Re-seeds the built-in example project.</p>
       </section>
     </div>
+  );
+}
+
+function triggerDownload(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'project';
+
+/**
+ * Project file I/O and v1-scenario migration (6H). Export/import go through the
+ * validated `projectSerialization` path: a malformed file is rejected with a
+ * visible reason (never silently accepted), imports disclose migration notes,
+ * and a v1 scenario becomes a CUFTS project with no data loss.
+ */
+function ProjectFilePanel() {
+  const project = useProjectStore((s) => s.project);
+  const toProjectJson = useProjectStore((s) => s.toProjectJson);
+  const applyImportedProject = useProjectStore((s) => s.applyImportedProject);
+  const v1Scenario = useAppStore((s) => s.scenario);
+  const [error, setError] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
+
+  const onExport = () => {
+    triggerDownload(`${slug(project.name)}.talon-project.json`, toProjectJson());
+    setError(null);
+    setOkMsg('Downloaded the active project as JSON.');
+  };
+
+  const onImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-importing the same file
+    if (!file) return;
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      setError('Could not read the selected file.');
+      setOkMsg(null);
+      return;
+    }
+    const result = importProjectJson(text);
+    if (result.ok) {
+      applyImportedProject(
+        result.project,
+        result.migrationNotes.map((n) => `Import "${file.name}": ${n}`),
+      );
+      setError(null);
+      setOkMsg(`Imported "${file.name}"${result.migrationNotes.length ? ' (see notes above)' : ''}.`);
+    } else {
+      setOkMsg(null);
+      setError(`Could not import "${file.name}": ${result.errors.join(' ')}`);
+    }
+  };
+
+  const onMigrateV1 = () => {
+    const { project: migrated, migrationNotes } = projectFromScenario(v1Scenario);
+    applyImportedProject(
+      migrated,
+      migrationNotes.map((n) => `Migrated v1 scenario: ${n}`),
+    );
+    setError(null);
+    setOkMsg(`Migrated the active v1 scenario "${v1Scenario.name}" into a project.`);
+  };
+
+  return (
+    <section className="results-panel no-print">
+      <h2>Project file &amp; migration</h2>
+      <div className="inspector-actions">
+        <button type="button" onClick={onExport}>Download project JSON</button>
+        <label className="file-import">
+          Import project / scenario…
+          <input type="file" accept="application/json,.json" onChange={onImportFile} />
+        </label>
+        <button type="button" onClick={onMigrateV1}>
+          Migrate active v1 scenario → project
+        </button>
+      </div>
+      <p className="note">
+        Import accepts a TALON project file or a legacy v1 CUFTS scenario file;
+        migration notes are disclosed and nothing is silently defaulted.
+      </p>
+      {okMsg && <p className="note" role="status">{okMsg}</p>}
+      {error && (
+        <p className="note" role="alert" style={{ color: 'var(--error)' }}>{error}</p>
+      )}
+    </section>
   );
 }
 

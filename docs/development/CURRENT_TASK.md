@@ -1,76 +1,66 @@
 # Current Task
 
-> **Active package: `6H` — Serialization, migration & regression (closes M6)**
-> This is the *only* active work package. When 6H is complete and merged,
-> M6 is done; advance `status.json` and start M7 at 7A.
+> **Active package: `7A` — Library store & browse (starts M7)**
+> **Milestone 6 is COMPLETE.** This is the *only* active work package.
+> When 7A is complete and merged, advance this file and `status.json` to 7B.
 
-## Previously completed (M6 so far)
+## Milestone 6 — COMPLETE (2026-07-24)
 
-- **6A** store · **6B** template gallery · **6C** canvas · **6D** node/element
-  editing (custom projects) · **6E** supports/constraints/loads · **6F**
-  property inspector & provenance ·
-- **6G — Analysis-run wiring & fidelity badges — DONE (2026-07-24).**
-  `core/projectRun.ts` maps the validated v1 summary into the solver-result
-  contract as a frozen, reproducible `AnalysisRun`; `AnalysisPanel` shows the
-  honest badge (Level 1, Not certified, missing≠OK). Custom-project analysis is
-  deferred — an explicit no-solver result, no fabrication. 386 tests. See
-  `DECISIONS.md` D-010.
+Generalized platform + graphical fixture editor, 6A–6H:
 
-## Objective (6H)
+- **6A** project store · **6B** template gallery · **6C** 2D canvas ·
+  **6D** node/element editing (authoritative custom projects) · **6E**
+  supports/constraints/loads · **6F** property inspector & provenance ·
+  **6G** analysis runs & fidelity badges (CUFTS; custom deferred) ·
+  **6H** project file I/O, v1→project migration, and the **exact-equality
+  regression** proving CUFTS results are unchanged through the full Project path.
 
-Make Project persistence and the CUFTS↔Project relationship **durable and
-provably correct**, closing M6:
+392 tests, build clean, production audit 0. Decisions D-002…D-011.
 
-1. **Project JSON export/import UI** in the Fixture Editor — download the active
-   project as a `talon-project` file and import one back (custom projects
-   round-trip losslessly; malformed files are rejected with a visible reason,
-   not silently accepted).
-2. **Migrate v1 scenarios into Projects** — a path to bring an existing v1
-   `Scenario` (from the v1 scenario library / a scenario JSON) into a CUFTS
-   Project via `projectFromScenario` / `importProjectJson`, with disclosed
-   migration notes and no data loss.
-3. **End-to-end regression** — assert that CUFTS static/dynamic/summary results
-   obtained **through the Project path** equal the v1 results **exactly**
-   (bit-for-bit), so the generalized platform never changed a validated number.
+## Objective (7A)
+
+Give the built-and-tested **component library** (`core/library/`) its first UI:
+load the library, browse/filter records, and show each record's verification
+state and provenance honestly. Seeds are visibly example-only.
 
 ## In scope
 
-- Export/import controls wired to `core/projectSerialization.ts`
-  (`exportProjectJson`/`importProjectJson`) and the project store.
-- A "convert v1 scenario → project" action (from the active v1 scenario or an
-  imported scenario file) using `projectFromScenario`.
-- Tests: round-trip (custom + CUFTS), migration-notes disclosure, and the
-  exact-equality CUFTS regression through the Project path.
+1. `src/state/libraryStore.ts` — a Zustand store over
+   `core/library/componentLibrary.ts` + `seedLibrary.ts`, persisted under its
+   own localStorage key (mirror the `projectStore` recovery pattern: corrupt
+   data dropped with a visible notice, never a silent default).
+2. A library browser UI (new tab or a section) listing records with
+   category filter, verification-state badges, and provenance summary.
+3. Seeded/example records are clearly marked example-only and never shown as
+   verified.
+4. Tests per `TEST_REQUIREMENTS.md` §7A.
 
 ## Out of scope
 
-- New solvers / custom-project analysis (deferred).
-- M7 component-library work (starts at 7A).
+- Record/property editing (7B), import/export & adapters UI (7C).
+- Sizing / candidate selection (7D), BOM / procurement (7E).
 
 ## Files to read (only these)
 
-- `src/core/projectSerialization.ts` — `exportProjectJson`, `importProjectJson`,
-  `projectFromScenario`.
-- `src/core/templates/cufts.ts` — `extractScenario`, `buildCuftsProject`.
-- `src/core/projectAnalysis.ts` — CUFTS results via the Project path.
-- `src/calculations/staticAnalysis.ts` / `dynamicsAnalysis.ts` /
-  `statusSummary.ts` — the v1 results to compare against (read-only).
-- `src/state/projectStore.ts` (`setProject`, `toProjectJson`), `src/state/store.ts`
-  (the v1 scenario library), `src/components/FixtureEditor.tsx`.
+- `src/core/library/componentLibrary.ts` — library type, records, provenance,
+  verification, merge/audit rules.
+- `src/core/library/seedLibrary.ts` — example-only seed records.
+- `src/core/provenance.ts` — `VerificationState`, `isVerified`, `STATE_LABEL`.
+- `src/state/projectStore.ts` — the store + persistence/recovery pattern to
+  mirror.
+- `src/App.tsx` / `src/components/FixtureEditor.tsx` — where to mount the browser.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` pass (≥ 386 + new 6H tests).
-- Project JSON round-trips losslessly; malformed import rejected with a notice.
-- A v1 scenario migrates into a Project with disclosed notes, no data loss.
-- **Exact-equality regression**: CUFTS static/dynamic/summary via the Project
-  path equal the v1 result (bit-for-bit) — the M6 headline guarantee.
-- No `src/calculations/` changes; `src/core/` changes additive and recorded.
+- `npm run build` and `npm test` pass (≥ 392 + new 7A tests).
+- Records list with correct verification badges; seeded records never display as
+  verified; corrupt persisted data recovers with a visible notice.
+- No engineering math in UI (Rules 2/7); no `src/calculations/` changes;
+  `src/core/` changes additive and recorded (prefer none).
 
 ## Definition of done
 
 1. Code + tests within scope; `npm test` and `npm run build` green.
 2. Decisions recorded in `DECISIONS.md`.
-3. `status.json` and this file advanced to mark 6H DONE and **M6 complete**;
-   set active package to 7A (M7).
+3. `status.json` and this file advanced to mark 7A DONE and 7B ACTIVE.
 4. Single package-scoped commit.
