@@ -15,6 +15,31 @@ Format:
 
 ---
 
+## D-009 — 6F edits dimensioned properties with source-value-preserving updates  (2026-07-24, 6F)
+
+**Decision.** Element/material `Quantity` properties are edited through pure ops
+in `core/projectEdits.ts` (`setElementProperty`, `setMaterialProperty`,
+`addMaterial`, `setElementMaterial`) plus a `updatedQuantity(existing, valueSI,
+state, dimension)` builder that changes only the working value and verification
+state and **preserves the original `sourceValue` and derating provenance**
+(Rule 5). A missing value is stored as `value: null` + state `missing`, never 0
+(Rules 3/4). The `PropertyRow` UI shows a "missing"/"unverified" badge honestly
+(`isMissing`/`isVerified`).
+
+**Units.** Dimension-aware display lives at the conversion boundary
+(`units.ts`): `toDisplayValue`/`fromDisplayValue`/`displayUnitLabel` map SI↔the
+active system for the dimensions the editor exposes (length, force,
+linearDensity, mass, area, velocity, energy); other dimensions fall back to SI;
+dimensionless shows no unit. No conversion logic leaks into components.
+
+**Consequences.** Editing is on custom-project cables (the only element type
+custom projects create); material create/attach/edit included. Force/etc. entry
+converts to SI on commit. Browser-verified: diameter 0.5 ft → 0.1524 m
+(userVerified), untouched MBS stays absent (never 0), material density set — all
+persist across reload with no console errors. `projectProperties.test.ts` covers
+the ops, the source-value-preservation rule, missing handling, and unit
+round-trips.
+
 ## D-008 — 6E extends editing to BCs/loads via the same pure-ops pattern  (2026-07-24, 6E)
 
 **Decision.** Supports, constraints, loads, load cases, and user load

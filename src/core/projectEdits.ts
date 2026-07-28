@@ -12,7 +12,8 @@
  * are editable.
  */
 import { GLOBAL_CS_ID, vec3, type ModelNode, type NodeRole } from './coordinates';
-import type { CableElement, Element, ElementType } from './elements';
+import { SI_UNIT, type Dimension } from './dimensions';
+import type { CableElement, Element, ElementType, Material } from './elements';
 import type {
   Constraint,
   ConstraintKind,
@@ -25,7 +26,7 @@ import type {
   Support,
   SupportKind,
 } from './model';
-import { provisional } from './provenance';
+import { provisional, type Quantity, type VerificationState } from './provenance';
 
 /** A point on the editor's elevation plane (global x, z); y is preserved/zero. */
 export interface PlanePoint {
@@ -318,4 +319,86 @@ export function removeLoadCombination(project: Project, combinationId: string): 
     ...project,
     loadCombinations: project.loadCombinations.filter((c) => c.id !== combinationId),
   };
+}
+
+// ── dimensioned properties & provenance (6F) ─────────────────────────────────
+
+/**
+ * Builds the new value for a dimensioned property, updating only the working
+ * value and verification state. The original published `sourceValue` and any
+ * derating provenance are PRESERVED (Rule 5) — editing a value never silently
+ * overwrites where it came from. Pass `null` for a missing value (Rule 4/3).
+ */
+export function updatedQuantity(
+  existing: Quantity | undefined,
+  valueSI: number | null,
+  state: VerificationState,
+  dimension: Dimension,
+): Quantity {
+  const q: Quantity = {
+    value: valueSI,
+    dimension,
+    unit: SI_UNIT[dimension],
+    provenance: { ...(existing?.provenance ?? {}), state },
+  };
+  if (existing?.sourceValue !== undefined) q.sourceValue = existing.sourceValue;
+  return q;
+}
+
+/** Sets (or clears, via a missing quantity) a dimensioned property on an element. */
+export function setElementProperty(
+  project: Project,
+  elementId: string,
+  key: string,
+  value: Quantity,
+): Project {
+  if (!project.elements.some((e) => e.id === elementId)) {
+    throw new Error('Cannot set a property on an unknown element.');
+  }
+  const elements = project.elements.map((e) =>
+    e.id === elementId ? ({ ...e, [key]: value } as unknown as Element) : e,
+  );
+  return { ...project, elements };
+}
+
+export function addMaterial(
+  project: Project,
+  spec: { name: string; category?: string },
+): { project: Project; materialId: string } {
+  const id = nextId('mat', project.materials.map((m) => m.id));
+  const material: Material = { id, name: spec.name, category: spec.category };
+  return { project: { ...project, materials: [...project.materials, material] }, materialId: id };
+}
+
+/** Attaches (or with `undefined`, detaches) a material to an element. */
+export function setElementMaterial(
+  project: Project,
+  elementId: string,
+  materialId: string | undefined,
+): Project {
+  if (!project.elements.some((e) => e.id === elementId)) {
+    throw new Error('Cannot set material on an unknown element.');
+  }
+  if (materialId !== undefined && !project.materials.some((m) => m.id === materialId)) {
+    throw new Error('Cannot attach an unknown material.');
+  }
+  const elements = project.elements.map((e) =>
+    e.id === elementId ? ({ ...e, materialId } as unknown as Element) : e,
+  );
+  return { ...project, elements };
+}
+
+export function setMaterialProperty(
+  project: Project,
+  materialId: string,
+  key: string,
+  value: Quantity,
+): Project {
+  if (!project.materials.some((m) => m.id === materialId)) {
+    throw new Error('Cannot set a property on an unknown material.');
+  }
+  const materials = project.materials.map((m) =>
+    m.id === materialId ? ({ ...m, [key]: value } as unknown as Material) : m,
+  );
+  return { ...project, materials };
 }

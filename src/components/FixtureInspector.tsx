@@ -17,15 +17,63 @@ import {
   addConstraint,
   addLoadCase,
   addLoadCombination,
+  addMaterial,
   addPointForceLoad,
   removeConstraint,
   removeLoad,
   removeLoadCase,
   removeLoadCombination,
   removeSupport,
+  setElementMaterial,
+  setElementProperty,
+  setMaterialProperty,
   setSupport,
+  updatedQuantity,
 } from '../core/projectEdits';
-import { formatForce, lbfToN, type UnitSystem } from '../units/units';
+import { isMissing, isVerified, type Quantity, type VerificationState } from '../core/provenance';
+import type { Dimension } from '../core/dimensions';
+import {
+  displayUnitLabel,
+  formatForce,
+  fromDisplayValue,
+  lbfToN,
+  toDisplayValue,
+  type UnitSystem,
+} from '../units/units';
+
+interface PropSpec {
+  key: string;
+  label: string;
+  dim: Dimension;
+}
+
+const CABLE_PROPS: PropSpec[] = [
+  { key: 'diameter', label: 'Diameter', dim: 'length' },
+  { key: 'linearMass', label: 'Linear mass', dim: 'linearDensity' },
+  { key: 'minBreakingStrength', label: 'Min breaking strength', dim: 'force' },
+  { key: 'designFactor', label: 'Design factor', dim: 'dimensionless' },
+  { key: 'pretension', label: 'Pretension', dim: 'force' },
+  { key: 'axialStiffness', label: 'Axial stiffness (EA)', dim: 'force' },
+];
+
+const MATERIAL_PROPS: PropSpec[] = [
+  { key: 'elasticModulus', label: 'Elastic modulus', dim: 'pressure' },
+  { key: 'density', label: 'Density', dim: 'density' },
+];
+
+const STATE_OPTIONS: VerificationState[] = [
+  'provisional',
+  'estimated',
+  'supplierListed',
+  'importedUnverified',
+  'internallyTested',
+  'userVerified',
+  'manufacturerVerified',
+];
+
+const CABLE_TYPES = new Set(['cable', 'elasticCable', 'segmentedCable']);
+const asQuantity = (o: object, key: string): Quantity | undefined =>
+  (o as Record<string, unknown>)[key] as Quantity | undefined;
 
 interface Props {
   project: Project;
@@ -40,17 +88,154 @@ const toN = (v: number, s: UnitSystem) => (s === 'us' ? lbfToN(v) : v);
 
 export function FixtureInspector({ project, setProject, selection, unitSystem }: Props) {
   const node = selection?.kind === 'node' ? project.nodes.find((n) => n.id === selection.id) : undefined;
+  const element = selection?.kind === 'edge' ? project.elements.find((e) => e.id === selection.id) : undefined;
 
   return (
     <div className="inspector">
-      {node ? (
+      {node && (
         <NodeInspector project={project} setProject={setProject} nodeId={node.id} nodeName={node.name ?? node.id} unitSystem={unitSystem} />
-      ) : (
-        <p className="note">Select a node to edit its support, constraints, and loads.</p>
+      )}
+      {element && (
+        <ElementInspector project={project} setProject={setProject} element={element} unitSystem={unitSystem} />
+      )}
+      {!node && !element && (
+        <p className="note">Select a node to edit supports/loads, or an element to edit its properties.</p>
       )}
       <LoadGrouping project={project} setProject={setProject} />
     </div>
   );
+}
+
+function ElementInspector({
+  project,
+  setProject,
+  element,
+  unitSystem,
+}: {
+  project: Project;
+  setProject: (p: Project) => void;
+  element: Project['elements'][number];
+  unitSystem: UnitSystem;
+}) {
+  const props = CABLE_TYPES.has(element.type) ? CABLE_PROPS : [];
+  const material = element.materialId
+    ? project.materials.find((m) => m.id === element.materialId)
+    : undefined;
+
+  return (
+    <div className="inspector-node">
+      <h3>Element: {element.name ?? element.id} [{element.type}]</h3>
+
+      <fieldset>
+        <legend>Properties</legend>
+        {props.length === 0 && <p className="note">No editable properties for this element type.</p>}
+        {props.map((p) => (
+          <PropertyRow
+            key={`${element.id}:${p.key}`}
+            spec={p}
+            current={asQuantity(element, p.key)}
+            unitSystem={unitSystem}
+            onCommit={(q) => setProject(setElementProperty(project, element.id, p.key, q))}
+          />
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend>Material</legend>
+        {material ? (
+          <>
+            <p className="note">{material.name}</p>
+            {MATERIAL_PROPS.map((p) => (
+              <PropertyRow
+                key={`${material.id}:${p.key}`}
+                spec={p}
+                current={asQuantity(material, p.key)}
+                unitSystem={unitSystem}
+                onCommit={(q) => setProject(setMaterialProperty(project, material.id, p.key, q))}
+              />
+            ))}
+            <div className="inspector-actions">
+              <button type="button" onClick={() => setProject(setElementMaterial(project, element.id, undefined))}>
+                Detach material
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="inspector-actions">
+            <button
+              type="button"
+              onClick={() => {
+                const { project: p2, materialId } = addMaterial(project, { name: 'Material' });
+                setProject(setElementMaterial(p2, element.id, materialId));
+              }}
+            >
+              Add material
+            </button>
+          </div>
+        )}
+      </fieldset>
+    </div>
+  );
+}
+
+function PropertyRow({
+  spec,
+  current,
+  unitSystem,
+  onCommit,
+}: {
+  spec: PropSpec;
+  current: Quantity | undefined;
+  unitSystem: UnitSystem;
+  onCommit: (q: Quantity) => void;
+}) {
+  const missing = isMissing(current);
+  const initValue =
+    current && current.value !== null
+      ? String(round6(toDisplayValue(current.value, spec.dim, unitSystem)))
+      : '';
+  const [valueStr, setValueStr] = useState(initValue);
+  const [state, setState] = useState<VerificationState>(
+    current?.provenance.state && current.provenance.state !== 'missing'
+      ? current.provenance.state
+      : 'provisional',
+  );
+  const unit = displayUnitLabel(spec.dim, unitSystem);
+
+  const set = () => {
+    const n = Number(valueStr);
+    if (valueStr.trim() === '' || !Number.isFinite(n)) return;
+    onCommit(updatedQuantity(current, fromDisplayValue(n, spec.dim, unitSystem), state, spec.dim));
+  };
+  const clear = () => onCommit(updatedQuantity(current, null, 'missing', spec.dim));
+
+  return (
+    <div className="prop-row">
+      <span className="prop-label">
+        {spec.label}
+        {missing ? (
+          <span className="badge-locked"> missing</span>
+        ) : (
+          current && !isVerified(current.provenance.state) && <span className="badge-locked"> unverified</span>
+        )}
+      </span>
+      <input type="number" value={valueStr} onChange={(e) => setValueStr(e.target.value)} placeholder="—" />
+      {unit && <span className="prop-unit">{unit}</span>}
+      <select value={state} onChange={(e) => setState(e.target.value as VerificationState)}>
+        {STATE_OPTIONS.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
+      </select>
+      <button type="button" onClick={set}>Set</button>
+      {!missing && (
+        <button type="button" className="link-btn" onClick={clear}>clear</button>
+      )}
+    </div>
+  );
+}
+
+function round6(v: number): number {
+  return Number(v.toFixed(6));
 }
 
 function NodeInspector({

@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6F",
+  "activePackage": "6G",
   "baseline": {
-    "tests": 374,
+    "tests": 382,
     "phaseStartTests": 334,
-    "testFiles": 26,
+    "testFiles": 27,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -100,13 +100,21 @@
         {
           "id": "6F",
           "title": "Property inspector & provenance",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 382,
+          "artifacts": [
+            "src/core/projectEdits.ts (property ops + updatedQuantity)",
+            "src/units/units.ts (dimension-aware display)",
+            "src/components/FixtureInspector.tsx (ElementInspector/PropertyRow)",
+            "src/tests/projectProperties.test.ts"
+          ],
           "dependsOn": ["6D"]
         },
         {
           "id": "6G",
           "title": "Analysis-run wiring & fidelity badges",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6D"]
         },
         {

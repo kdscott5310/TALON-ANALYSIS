@@ -12,6 +12,8 @@
  * Conversion factors are exact NIST-defined values where applicable.
  */
 
+import { SI_UNIT, type Dimension } from '../core/dimensions';
+
 // --- exact factors ---
 export const FT_PER_M = 3.280839895013123; // 1 m = 1/0.3048 ft
 export const M_PER_FT = 0.3048; // exact
@@ -65,6 +67,38 @@ export const kgPerMToLbPerFt = (kgPerM: number): number =>
   kgPerM * M_PER_FT * LB_PER_KG;
 
 export type UnitSystem = 'us' | 'si';
+
+// ── dimension-aware display (the SI↔display boundary, Rule 8) ───────────────
+
+/** US-customary display for the dimensions the property editor exposes. */
+const US_DISPLAY: Partial<Record<Dimension, { label: string; toSI: (v: number) => number; fromSI: (v: number) => number }>> = {
+  length: { label: 'ft', toSI: ftToM, fromSI: mToFt },
+  area: { label: 'ft^2', toSI: ft2ToM2, fromSI: m2ToFt2 },
+  mass: { label: 'lb', toSI: lbToKg, fromSI: kgToLb },
+  linearDensity: { label: 'lb/ft', toSI: lbPerFtToKgPerM, fromSI: kgPerMToLbPerFt },
+  force: { label: 'lbf', toSI: lbfToN, fromSI: nToLbf },
+  velocity: { label: 'mph', toSI: mphToMps, fromSI: mpsToMph },
+  energy: { label: 'ft*lbf', toSI: ftLbfToJ, fromSI: jToFtLbf },
+};
+
+/** Unit label to show for a dimension in the active system ('' for dimensionless). */
+export function displayUnitLabel(dimension: Dimension, system: UnitSystem): string {
+  if (dimension === 'dimensionless') return '';
+  const us = US_DISPLAY[dimension];
+  return system === 'us' && us ? us.label : SI_UNIT[dimension];
+}
+
+/** Converts an SI value to the active display system (identity when no US mapping). */
+export function toDisplayValue(valueSI: number, dimension: Dimension, system: UnitSystem): number {
+  const us = US_DISPLAY[dimension];
+  return system === 'us' && us ? us.fromSI(valueSI) : valueSI;
+}
+
+/** Converts a display-system value back to SI (identity when no US mapping). */
+export function fromDisplayValue(value: number, dimension: Dimension, system: UnitSystem): number {
+  const us = US_DISPLAY[dimension];
+  return system === 'us' && us ? us.toSI(value) : value;
+}
 
 /** Formats a length stored in meters for display in the active unit system. */
 export function formatLength(m: number, system: UnitSystem, digits = 1): string {
