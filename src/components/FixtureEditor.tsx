@@ -1,17 +1,19 @@
 /**
- * Fixture Editor — Milestone 6A (read-only foundation).
+ * Fixture Editor — Milestones 6A–6G.
  *
- * Renders the generalized `Project` held by the project store. This is the
- * seam the graphical editor is built on: 6A only *displays* the Project
- * (identity, model contents, data-verification status); node/element editing
- * (6C–6E), the template gallery (6B), the property inspector (6F), and solver
- * runs with fidelity badges (6G) arrive in later packages.
- *
- * This component performs no engineering math (Rules 2/7) — it reads store
- * state and presents it.
+ * Hosts the generalized `Project`: identity/contents, the 2D graphical editor
+ * (canvas + inspector), the template gallery, and the analysis-run panel with
+ * honest fidelity/certification badges. It performs no engineering math (Rules
+ * 2/7) — it reads store state, drives the pure edit/run operations, and
+ * presents their results.
  */
+import { useState } from 'react';
 import { useProjectStore } from '../state/projectStore';
 import { isVerified, type VerificationState } from '../core/provenance';
+import { runProjectAnalysis } from '../core/projectRun';
+import { describeRun, verifyRunIntegrity, type AnalysisRun } from '../core/analysisRun';
+import type { Project } from '../core/model';
+import { APP_VERSION } from '../version';
 import { TemplateGallery } from './TemplateGallery';
 import { EditorCanvas } from './EditorCanvas';
 
@@ -124,6 +126,8 @@ export function FixtureEditor() {
         <EditorCanvas />
       </section>
 
+      <AnalysisPanel project={project} />
+
       <section className="results-panel no-print">
         <details>
           <summary>New project from a fixture template</summary>
@@ -211,4 +215,93 @@ export function FixtureEditor() {
       </section>
     </div>
   );
+}
+
+const ACCEPT_CLASS: Record<string, string> = {
+  'Acceptable (preliminary)': 'st-ok',
+  Caution: 'st-caution',
+  'NOT ACCEPTABLE': 'st-failed',
+  'Insufficient information': 'st-insufficient',
+};
+
+/**
+ * Runs the applicable analysis and shows the honest result badge (6G). The run
+ * is frozen + fingerprinted; nothing here computes engineering results — it
+ * calls `runProjectAnalysis` and renders its badge (Rules 2/6/7).
+ */
+function AnalysisPanel({ project }: { project: Project }) {
+  const [run, setRun] = useState<AnalysisRun | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const onRun = () => {
+    const result = runProjectAnalysis(project, { appVersion: APP_VERSION, ranOn: new Date().toISOString() });
+    if (result.ok) {
+      setRun(result.run);
+      setError(null);
+    } else {
+      setRun(null);
+      setError(result.reason);
+    }
+  };
+
+  const badge = run?.output.badge;
+
+  return (
+    <section className="results-panel">
+      <h2>Analysis</h2>
+      <div className="inspector-actions no-print">
+        <button type="button" onClick={onRun}>Run analysis</button>
+      </div>
+
+      {error && <p className="note" role="status">{error}</p>}
+
+      {run && badge && (
+        <>
+          <table className="result-badge">
+            <tbody>
+              <tr><td>Analysis level</td><td>{badge.analysisLevel}{badge.reducedOrder && <span className="note"> · reduced-order</span>}</td></tr>
+              <tr><td>Solver</td><td>{badge.solver} v{badge.solverVersion}</td></tr>
+              <tr><td>Validation</td><td>{badge.validation}</td></tr>
+              <tr><td>Input confidence</td><td>{badge.inputConfidence}</td></tr>
+              <tr><td>Applicability</td><td>{badge.applicability}</td></tr>
+              <tr>
+                <td>Result status</td>
+                <td><span className={ACCEPT_CLASS[badge.acceptance] ?? ''}>{badge.acceptance}</span></td>
+              </tr>
+              <tr><td>Certification</td><td><span className="badge-unverified">{badge.certificationStatus}</span></td></tr>
+              <tr><td>Convergence</td><td>{run.output.convergence}</td></tr>
+              <tr><td>Run</td><td className="note">{run.id.length > 40 ? `${run.id.slice(0, 40)}…` : run.id} · fingerprint {run.fingerprint} · integrity {verifyRunIntegrity(run) ? 'ok' : 'FAILED'}</td></tr>
+            </tbody>
+          </table>
+
+          <details>
+            <summary>Result values ({run.output.scalars.length})</summary>
+            <table>
+              <tbody>
+                {run.output.scalars.map((s) => (
+                  <tr key={s.key}>
+                    <td>{s.label}</td>
+                    <td className="num">
+                      {s.quantity.value === null
+                        ? <span className="badge-locked">insufficient</span>
+                        : `${trim(s.quantity.value)} ${s.quantity.unit === '1' ? '' : s.quantity.unit}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+
+          <details>
+            <summary>Run header (traceability)</summary>
+            <pre className="run-header">{describeRun(run).join('\n')}</pre>
+          </details>
+        </>
+      )}
+    </section>
+  );
+}
+
+function trim(v: number): string {
+  return Number(v.toFixed(3)).toString();
 }

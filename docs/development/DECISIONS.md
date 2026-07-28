@@ -15,6 +15,35 @@ Format:
 
 ---
 
+## D-010 — 6G runs CUFTS through the badge contract; custom analysis deferred  (2026-07-24, 6G)
+
+**Decision (user-directed).** 6G wires analysis for **CUFTS projects only**:
+`core/projectRun.ts` maps the validated v1 five-category summary
+(`summarizeProject`) into the solver-result contract (`core/solver.ts`) and
+freezes it as an `AnalysisRun`. **Custom-project analysis is deferred** to a
+later package — `runProjectAnalysis` returns an explicit `{ ok: false, reason }`
+("no solver ships for this template") rather than fabricating a result (Rule 4).
+The truss-solver-for-custom path (`trussFEM.ts`) is intentionally NOT wired yet.
+
+**Honesty of the mapping.** Fidelity is Level 1 (never higher than computed);
+certification is always "Not certified"; a not-evaluated check becomes a
+`missing` quantity (value null), never 0; a `failed`/`insufficient`/`error`
+summary maps to `notAcceptable`/`insufficientInformation`, never OK. The run is
+fingerprinted and reproducible (same inputs + ranOn → identical run).
+
+**Runs held in view state (6G scope).** The run is shown in the editor's
+`AnalysisPanel` and NOT persisted onto the project. CUFTS projects re-derive
+their `analysisRuns: []` on load (D-007), so persisting run history there is a
+separate concern; 6G delivers the frozen run + badge, and durable run history is
+left for a later package. No engineering math added to UI or `projectRun`
+(Rules 2/7) — it assembles metadata around an existing result.
+
+**Consequences.** No new solvers; `src/calculations/` untouched; CUFTS numbers
+unchanged. Browser-verified: CUFTS → Level 1 / Not certified / honest
+NOT-ACCEPTABLE+insufficient badge, run integrity ok; custom → deferred message.
+`projectRun.test.ts` covers fidelity, reproducibility, missing≠0, and the
+custom no-solver path.
+
 ## D-009 — 6F edits dimensioned properties with source-value-preserving updates  (2026-07-24, 6F)
 
 **Decision.** Element/material `Quantity` properties are edited through pure ops

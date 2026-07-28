@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "6G",
+  "activePackage": "6H",
   "baseline": {
-    "tests": 382,
+    "tests": 386,
     "phaseStartTests": 334,
-    "testFiles": 27,
+    "testFiles": 28,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -114,13 +114,21 @@
         {
           "id": "6G",
           "title": "Analysis-run wiring & fidelity badges",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 386,
+          "artifacts": [
+            "src/core/projectRun.ts",
+            "src/components/FixtureEditor.tsx (AnalysisPanel)",
+            "src/tests/projectRun.test.ts"
+          ],
+          "note": "CUFTS-only per user direction; custom-project analysis deferred (D-010).",
           "dependsOn": ["6D"]
         },
         {
           "id": "6H",
           "title": "Serialization, migration & regression",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["6A", "6B", "6C", "6D", "6E", "6F", "6G"]
         }
       ]

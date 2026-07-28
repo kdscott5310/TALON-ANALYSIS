@@ -240,4 +240,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .prop-row button { padding: 3px 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.76rem; }
 .prop-row button.link-btn { border: none; background: none; color: var(--accent); }
 .prop-unit { color: #6b7a88; min-width: 34px; }
+.result-badge { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin: 6px 0; }
+.result-badge td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.result-badge td:first-child { color: #55606b; width: 40%; }
+.result-badge .st-ok, .result-badge .st-caution, .result-badge .st-failed, .result-badge .st-insufficient { padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+.run-header { font-size: 0.74rem; background: #f8fafc; border: 1px solid var(--line); border-radius: 4px; padding: 8px; overflow-x: auto; white-space: pre; }
 @media (max-width: 900px) { .inspector { grid-template-columns: 1fr; } }

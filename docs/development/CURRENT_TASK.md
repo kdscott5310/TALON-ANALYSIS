@@ -1,85 +1,76 @@
 # Current Task
 
-> **Active package: `6G` — Analysis-run wiring & fidelity badges**
-> This is the *only* active work package. Do not start 6H or anything later.
-> When 6G is complete and merged, advance this file and `status.json` to 6H.
+> **Active package: `6H` — Serialization, migration & regression (closes M6)**
+> This is the *only* active work package. When 6H is complete and merged,
+> M6 is done; advance `status.json` and start M7 at 7A.
 
-## Previously completed
+## Previously completed (M6 so far)
 
 - **6A** store · **6B** template gallery · **6C** canvas · **6D** node/element
-  editing (custom projects) · **6E** supports/constraints/loads ·
-- **6F — Property inspector & provenance — DONE (2026-07-24).** Pure property
-  ops (`setElementProperty`/`setMaterialProperty`/`addMaterial`/
-  `setElementMaterial` + `updatedQuantity` preserving source value, Rule 5);
-  dimension-aware display in `units.ts`; `ElementInspector`/`PropertyRow` UI with
-  honest missing/unverified badges. 382 tests; browser-verified (0.5 ft →
-  0.1524 m, missing stays absent, persists). See `DECISIONS.md` D-009.
+  editing (custom projects) · **6E** supports/constraints/loads · **6F**
+  property inspector & provenance ·
+- **6G — Analysis-run wiring & fidelity badges — DONE (2026-07-24).**
+  `core/projectRun.ts` maps the validated v1 summary into the solver-result
+  contract as a frozen, reproducible `AnalysisRun`; `AnalysisPanel` shows the
+  honest badge (Level 1, Not certified, missing≠OK). Custom-project analysis is
+  deferred — an explicit no-solver result, no fabrication. 386 tests. See
+  `DECISIONS.md` D-010.
 
-## Objective (6G)
+## Objective (6H)
 
-Run solvers **from the editor through the solver contract**, produce **frozen,
-reproducible analysis runs**, and render honest **result badges**: fidelity
-level, solver id + version, applicability, convergence, and certification status
-(always “Not certified”).
+Make Project persistence and the CUFTS↔Project relationship **durable and
+provably correct**, closing M6:
 
-## ⚠️ Decide the solver-per-project mapping first (record in DECISIONS)
-
-- **CUFTS projects** already have validated Level-1 results via the v1 solvers.
-  Surface them through `core/projectAnalysis.ts` + the run/badge contract —
-  **do not recompute or change any CUFTS number** (Rule 1; exact-equality still
-  holds).
-- **Custom projects** carry general nodes/elements/supports/loads. The natural
-  fit is the 2D truss direct-stiffness solver (`calculations/trussFEM.ts`,
-  Level-2 groundwork) — but it needs real E·A per element and restraint/loads.
-  Where those are **missing**, the run must report *insufficient information /
-  not applicable*, never a fabricated result (Rules 2, 4; applicability engine
-  in `core/solver.ts`).
-- Do not invent a solver for geometry it cannot handle; if nothing applies, say
-  so on the badge.
+1. **Project JSON export/import UI** in the Fixture Editor — download the active
+   project as a `talon-project` file and import one back (custom projects
+   round-trip losslessly; malformed files are rejected with a visible reason,
+   not silently accepted).
+2. **Migrate v1 scenarios into Projects** — a path to bring an existing v1
+   `Scenario` (from the v1 scenario library / a scenario JSON) into a CUFTS
+   Project via `projectFromScenario` / `importProjectJson`, with disclosed
+   migration notes and no data loss.
+3. **End-to-end regression** — assert that CUFTS static/dynamic/summary results
+   obtained **through the Project path** equal the v1 results **exactly**
+   (bit-for-bit), so the generalized platform never changed a validated number.
 
 ## In scope
 
-1. A “Run analysis” action in the editor that builds an `AnalysisCase`, invokes
-   the applicable solver via the contract, and stores a **frozen**
-   `AnalysisRun` (`core/analysisRun.ts`) on the project.
-2. Result panel rendering the **badge**: fidelity (0–3), solver id/version,
-   applicability (within/outside limits / insufficient info), convergence, and
-   certification status.
-3. Reproducibility: same inputs → identical run (fingerprint stable).
-4. Failed / non-convergent / insufficient cases render as such — not “OK”.
-5. Tests per `TEST_REQUIREMENTS.md` §6G.
+- Export/import controls wired to `core/projectSerialization.ts`
+  (`exportProjectJson`/`importProjectJson`) and the project store.
+- A "convert v1 scenario → project" action (from the active v1 scenario or an
+  imported scenario file) using `projectFromScenario`.
+- Tests: round-trip (custom + CUFTS), migration-notes disclosure, and the
+  exact-equality CUFTS regression through the Project path.
 
 ## Out of scope
 
-- New solvers or new fidelity levels (engines already exist).
-- Migration of v1 scenarios into Projects (6H).
-- Report export (reporting milestone), optimization/uncertainty UI (M12 UI).
+- New solvers / custom-project analysis (deferred).
+- M7 component-library work (starts at 7A).
 
 ## Files to read (only these)
 
-- `src/core/solver.ts` — solver contract: fidelity, applicability, acceptance,
-  certification badge.
-- `src/core/analysisRun.ts` — frozen, fingerprinted runs.
-- `src/core/projectAnalysis.ts` — how CUFTS runs are orchestrated today.
-- `src/calculations/trussFEM.ts` — the general solver for custom projects.
-- `src/core/templates/cufts.ts` (`extractScenario`, `isCuftsProject`),
-  `src/core/templates/custom.ts` (`isCustomProject`).
-- `src/state/projectStore.ts`, `src/components/FixtureEditor.tsx` /
-  `EditorCanvas.tsx` — where to surface the run + badge.
+- `src/core/projectSerialization.ts` — `exportProjectJson`, `importProjectJson`,
+  `projectFromScenario`.
+- `src/core/templates/cufts.ts` — `extractScenario`, `buildCuftsProject`.
+- `src/core/projectAnalysis.ts` — CUFTS results via the Project path.
+- `src/calculations/staticAnalysis.ts` / `dynamicsAnalysis.ts` /
+  `statusSummary.ts` — the v1 results to compare against (read-only).
+- `src/state/projectStore.ts` (`setProject`, `toProjectJson`), `src/state/store.ts`
+  (the v1 scenario library), `src/components/FixtureEditor.tsx`.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` pass (≥ 382 + new 6G tests).
-- Runs carry complete metadata (solver id/version, fidelity, applicability,
-  convergence, certification) and are frozen/reproducible.
-- No Level claim exceeds what was computed; missing-data/failed/non-convergent
-  cases never render as OK.
-- **CUFTS results unchanged** (regression stays exact); no `src/calculations/`
-  edits; `src/core/` changes additive and recorded.
+- `npm run build` and `npm test` pass (≥ 386 + new 6H tests).
+- Project JSON round-trips losslessly; malformed import rejected with a notice.
+- A v1 scenario migrates into a Project with disclosed notes, no data loss.
+- **Exact-equality regression**: CUFTS static/dynamic/summary via the Project
+  path equal the v1 result (bit-for-bit) — the M6 headline guarantee.
+- No `src/calculations/` changes; `src/core/` changes additive and recorded.
 
 ## Definition of done
 
-1. Solver-per-project mapping recorded in `DECISIONS.md`.
-2. Code + tests within scope; `npm test` and `npm run build` green.
-3. `status.json` and this file advanced to mark 6G DONE and 6H ACTIVE.
+1. Code + tests within scope; `npm test` and `npm run build` green.
+2. Decisions recorded in `DECISIONS.md`.
+3. `status.json` and this file advanced to mark 6H DONE and **M6 complete**;
+   set active package to 7A (M7).
 4. Single package-scoped commit.
