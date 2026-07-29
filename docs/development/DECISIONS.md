@@ -15,6 +15,29 @@ Format:
 
 ---
 
+## D-016 — 7E BOM/procurement from an in-view sizing basket (closes M7)  (2026-07-24, 7E)
+
+**Decision.** The sizing panel (7D) gains an "add to BOM" action that pushes its
+`SizingResult` (+ rating key) into a basket held in `LibraryBrowser` view state
+(sizing results are ephemeral computed data — not persisted domain data).
+`LibraryProcurementPanel` renders that basket through the tested engines:
+`assembleBom` for the BOM table and `reports/procurementSheet.buildProcurementSheet`
+/ `procurementSheetCsv` for search phrases, RFQ text, and CSV. A no-candidate
+demand becomes a **PROCUREMENT REQUIRED** line — never a fabricated part — and
+an example-only selection reports **verified = no** honestly. No math in the UI
+(Rules 2/7).
+
+**Fix.** RFQ blocks are keyed by `label + index` (demand labels can repeat) — an
+earlier `key=label` produced a duplicate-key warning; the BOM table keys on the
+unique `itemNumber`.
+
+**Consequences.** No `src/core`/`src/calculations` changes. Browser-verified:
+BOM line 001 selected (example rope, verified=no), line 002 (500000 lbf) →
+PROCUREMENT REQUIRED; CSV export + RFQ render; keys unique. `libraryProcurement.test.ts`
+covers select-vs-procurement disposition, the calculated-requirement/selected/
+verified distinction, and the CSV PROCUREMENT-REQUIRED marker. **Milestone 7 is
+complete.**
+
 ## D-015 — 7D sizing UI presents every candidate; the engine does the math  (2026-07-24, 7D)
 
 **Decision.** `LibrarySizingPanel` collects a demand (label, category, rating

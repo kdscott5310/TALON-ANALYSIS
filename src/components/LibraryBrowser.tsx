@@ -20,6 +20,7 @@ import { STATE_LABEL, isVerified, type VerificationState } from '../core/provena
 import { NewRecordForm, RecordEditor } from './LibraryRecordEditor';
 import { LibraryIoPanel } from './LibraryIoPanel';
 import { LibrarySizingPanel } from './LibrarySizingPanel';
+import { LibraryProcurementPanel, type BomItem } from './LibraryProcurementPanel';
 
 const ALL = '__all__';
 
@@ -35,6 +36,7 @@ export function LibraryBrowser() {
   const dismissNotices = useLibraryStore((s) => s.dismissNotices);
   const resetToSeedLibrary = useLibraryStore((s) => s.resetToSeedLibrary);
   const [category, setCategory] = useState<string>(ALL);
+  const [bomItems, setBomItems] = useState<BomItem[]>([]);
 
   const categories = useMemo(
     () => Array.from(new Set(library.records.map((r) => r.category))).sort(),
@@ -89,7 +91,10 @@ export function LibraryBrowser() {
         </div>
       </section>
 
-      <LibrarySizingPanel />
+      <LibrarySizingPanel
+        onAddToBom={(result, ratingKey) => setBomItems((items) => [...items, { result, ratingKey }])}
+      />
+      <LibraryProcurementPanel items={bomItems} onClear={() => setBomItems([])} />
       <LibraryIoPanel />
       <NewRecordForm />
 

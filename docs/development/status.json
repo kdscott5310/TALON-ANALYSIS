@@ -2,11 +2,12 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "7E",
+  "activePackage": "none",
+  "phaseComplete": true,
   "baseline": {
-    "tests": 418,
+    "tests": 421,
     "phaseStartTests": 334,
-    "testFiles": 33,
+    "testFiles": 34,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -143,7 +144,7 @@
     {
       "id": "M7",
       "title": "Component library & procurement",
-      "status": "in_progress",
+      "status": "done",
       "packages": [
         {
           "id": "7A",
@@ -199,7 +200,14 @@
         {
           "id": "7E",
           "title": "BOM & procurement sheet",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 421,
+          "artifacts": [
+            "src/components/LibraryProcurementPanel.tsx",
+            "src/components/LibrarySizingPanel.tsx (add-to-BOM)",
+            "src/tests/libraryProcurement.test.ts"
+          ],
           "dependsOn": ["7D"]
         }
       ]

@@ -37,7 +37,11 @@ const STATUS_CLASS: Record<Candidate['status'], string> = {
   excludedObsolete: 'st-caution',
 };
 
-export function LibrarySizingPanel() {
+export function LibrarySizingPanel({
+  onAddToBom,
+}: {
+  onAddToBom?: (result: SizingResult, ratingKey: string) => void;
+}) {
   const library = useLibraryStore((s) => s.library);
   const unitSystem = useAppStore((s) => s.unitSystem);
 
@@ -113,6 +117,14 @@ export function LibrarySizingPanel() {
           <p className="note">
             Required rating for “{result.demandLabel}”: <strong>{formatForce(result.requiredRating, unitSystem)}</strong>{' '}
             (demand × design factor) · {result.passing.length} passing of {result.allCandidates.length} candidates.
+            {onAddToBom && (
+              <>
+                {' '}
+                <button type="button" className="link-btn" onClick={() => onAddToBom(result, ratingKey)}>
+                  add to BOM
+                </button>
+              </>
+            )}
           </p>
           {result.allCandidates.length === 0 ? (
             <p className="note">No components in this category — a procurement search is needed (7E).</p>

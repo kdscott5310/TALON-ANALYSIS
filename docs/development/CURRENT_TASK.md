@@ -1,68 +1,48 @@
 # Current Task
 
-> **Active package: `7E` — BOM & procurement sheet (closes M7)**
-> This is the *only* active work package. When 7E is complete and merged, M7 is
-> done — advance `status.json` and pick the next milestone.
+> **No active package. Milestones 6 and 7 are both COMPLETE.**
+> Pick the next milestone/work before setting an active package here and in
+> `status.json`.
 
-## Previously completed
+## Milestones 6 & 7 — COMPLETE (2026-07-24)
 
-- **Milestone 6 (6A–6H) — COMPLETE.**
-- **7A** library store & browse · **7B** record & property editor · **7C**
-  import/export & source adapters ·
-- **7D — Sizing & candidate selection — DONE (2026-07-24).**
-  `LibrarySizingPanel` over `calculations/componentSizing.sizeComponent`: shows
-  every candidate with published/derated rating, utilization, margin,
-  verification, controlling criterion; never auto-picks the smallest; missing→
-  insufficient; verified-required excludes seeds. 418 tests. See `DECISIONS.md`
-  D-015.
+**M6 — Generalized platform + graphical fixture editor (6A–6H):** project store,
+template gallery, 2D editor canvas, node/element editing on authoritative custom
+projects, supports/constraints/loads, dimensioned property editing with
+provenance, analysis runs + fidelity badges (CUFTS), and project file I/O + v1
+migration + the exact-equality CUFTS regression.
 
-## Objective (7E)
+**M7 — Component library + procurement (7A–7E):** library store & browse,
+record & property editor (verified-overwrite refusal surfaced), import/export &
+source-adapter compliance, sizing & candidate selection, and BOM + procurement
+search sheet / RFQ.
 
-Assemble a **bill of materials** from sizing results and generate a
-**procurement search sheet / RFQ**, distinguishing calculated requirement /
-recommended minimum / selected component / verified component. A demand with no
-passing candidate becomes a **procurement line**, never a fabricated part.
+421 tests, build clean, production audit 0. The validated v1 CUFTS UI and its
+Level-1 results are unchanged throughout. Decisions D-001…D-016.
 
-## In scope
+## Candidate next work (not yet scheduled)
 
-1. Collect one or more sizing results (extend the 7D flow to keep a list of
-   demands, or size several categories) and call `assembleBom`
-   (`calculations/componentSizing.ts`) to build BOM lines.
-2. A procurement output via `reports/procurementSheet.ts`: search-phrase
-   generator, RFQ text, and CSV that mark unselected demands PROCUREMENT
-   REQUIRED and distinguish calculated requirement / recommended minimum /
-   selected / verified.
-3. Export the BOM/procurement sheet as CSV (reuse the `triggerDownload`/download
-   pattern) and show the RFQ text.
-4. Tests per `TEST_REQUIREMENTS.md` §7E.
+Pick one and write a package brief here + set the active pointer in
+`status.json` before implementing.
 
-## Out of scope
+- **Custom-project analysis** — wire `calculations/trussFEM.ts` (2D truss
+  direct-stiffness, Level 2) to custom projects, with honest applicability when
+  E·A / restraints / loads are missing (deferred in 6G, D-010).
+- **Durable analysis-run history** — persist frozen `AnalysisRun`s (6G holds
+  them in view state only).
+- **Surface the M8–M17 engines** — nonlinear cable (M8), coupled dynamics
+  (M9), brake curves (M10), lateral cable (M11), uncertainty/optimization (M12),
+  FMEA/hazard register (M14), digital-twin correlation (M16), truss/FEA export
+  (M17) all have tested cores but limited/no UI beyond what M6/M7 added.
+- **CUFTS→editor bridge** — let the fixture editor open the migrated CUFTS
+  project's geometry read-only alongside its analysis (today CUFTS geometry is
+  derived and read-only; the editor edits custom projects).
 
-- New engineering math (the sizing + procurement engines exist).
-- Optimization (M12), cost roll-up beyond what `procurementSheet` provides.
+## How to start the next package
 
-## Files to read (only these)
-
-- `src/reports/procurementSheet.ts` — search-phrase / RFQ / CSV generators and
-  the four-way distinction (read its exact API; do not change it).
-- `src/calculations/componentSizing.ts` — `assembleBom`, `SizingResult`,
-  `SizedBomLine`.
-- `src/components/LibrarySizingPanel.tsx` — the 7D sizing flow to build on.
-- `src/components/LibraryIoPanel.tsx` / `FixtureEditor.tsx` — download helper to
-  mirror.
-
-## Acceptance criteria
-
-- `npm run build` and `npm test` pass (≥ 418 + new 7E tests).
-- BOM/procurement outputs carry the calculated requirement / recommended minimum
-  / selected / verified distinction; unselected demands are marked PROCUREMENT
-  REQUIRED; no fabricated parts for no-candidate demands.
-- CSV/RFQ export works; no engineering math in UI (Rules 2/7); no
-  `src/calculations/` changes; `src/core/` changes additive and recorded.
-
-## Definition of done
-
-1. Code + tests within scope; `npm test` and `npm run build` green.
-2. Decisions recorded in `DECISIONS.md`.
-3. `status.json` and this file advanced to mark 7E DONE and **M7 complete**.
-4. Single package-scoped commit.
+1. Choose the package; write its brief in this file (objective, in/out of scope,
+   files to read, acceptance, DoD) as for 6A–7E.
+2. Set `activePackage` + the package `status: "active"` in `status.json`
+   (clear `phaseComplete`).
+3. Branch `milestone-<id>-<slug>`, implement, test, browser-verify, record a
+   decision, commit, merge to `main`, push.
