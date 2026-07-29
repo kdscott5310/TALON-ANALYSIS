@@ -26,6 +26,33 @@ in a shared Git repo ("latest draft" = latest pull); standards sync first, then
 project drafts. A real-time multi-user backend was explicitly deferred (hosting/
 auth/cost/security review; I also cannot create accounts or enter credentials).
 
+## D-019 — 9A standards as a shared, Git-versioned JSON document  (2026-07-24, 9A)
+
+**Decision (user chose standards-first).** Pivoted from the analysis stream to
+collaboration. A `core/standards.ts` document (design factors, allowable limits,
+verification policy, load-combination templates + identity) is edited in a
+`StandardsPanel` (new "Standards" tab) and exported/imported as a versioned JSON
+envelope (`core/standardsIo.ts`). Sharing is **git-based**, matching the app's
+client-only/no-backend design: one engineer exports and commits the file, others
+pull and import; Git history is the version trail, the `revision` field is a
+human label. `state/standardsStore.ts` persists locally with corrupt-data
+recovery (like the project/library stores).
+
+**Honesty.** The shipped default is a clearly-flagged **starter template**
+(`starterTemplate: true`) that `checkStandards` warns is not authoritative until
+reviewed; an org approves it by unchecking the flag. No building-code
+combination is ever assumed — a template cites a `standard` only when set. Edits
+use a draft + Save; import/reset adopt immediately.
+
+**Consequences.** Additive new core modules; no existing solver/core changed.
+Editing uses on-blur commit (`onBlur` → React `focusout` delegation) — a synthetic
+`blur` in browser verification didn't fire it (harness quirk, not an app bug);
+verified via `focusout`: edit+save persists (cable factor 5→8), approve toggle
+clears the starter flag, JSON round-trips. `standards.test.ts` (9) covers the
+model, immutable edits, the below-1 warning, the serialization round-trip,
+malformed/too-new rejection, and store seed/persist/recover. Next: **9B** project
+draft library & save/load for repo sharing.
+
 ## D-018 — 8A brake curves add an ADDITIVE 1-DOF stop sim; v1 untouched  (2026-07-24, 8A)
 
 **Decision.** So the brake curve produces a real result without touching the

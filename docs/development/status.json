@@ -2,12 +2,12 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "8B",
+  "activePackage": "9B",
   "phaseComplete": false,
   "baseline": {
-    "tests": 427,
+    "tests": 436,
     "phaseStartTests": 334,
-    "testFiles": 35,
+    "testFiles": 36,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -226,11 +226,11 @@
     {
       "id": "M9",
       "title": "Git-based design sharing & standards",
-      "status": "not_started",
+      "status": "in_progress",
       "note": "Client-only/no-backend: app reads/writes JSON files; engineers version them in a shared Git repo. Standards sync first, then project drafts (user direction).",
       "packages": [
-        { "id": "9A", "title": "Standards library import/sync (design factors, load combos, verification policy)", "status": "todo", "dependsOn": [] },
-        { "id": "9B", "title": "Project draft library & save/load/export for repo sharing", "status": "todo", "dependsOn": [] }
+        { "id": "9A", "title": "Standards library import/sync (design factors, load combos, verification policy)", "status": "done", "completedOn": "2026-07-24", "tests": 436, "artifacts": ["src/core/standards.ts", "src/core/standardsIo.ts", "src/state/standardsStore.ts", "src/components/StandardsPanel.tsx", "src/tests/standards.test.ts"], "dependsOn": [] },
+        { "id": "9B", "title": "Project draft library & save/load/export for repo sharing", "status": "active", "dependsOn": [] }
       ]
     }
   ]
