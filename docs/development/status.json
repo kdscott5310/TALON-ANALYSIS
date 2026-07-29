@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "7D",
+  "activePackage": "7E",
   "baseline": {
-    "tests": 413,
+    "tests": 418,
     "phaseStartTests": 334,
-    "testFiles": 32,
+    "testFiles": 33,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -187,13 +187,19 @@
         {
           "id": "7D",
           "title": "Sizing & candidate selection",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 418,
+          "artifacts": [
+            "src/components/LibrarySizingPanel.tsx",
+            "src/tests/librarySizing.test.ts"
+          ],
           "dependsOn": ["7A", "6G"]
         },
         {
           "id": "7E",
           "title": "BOM & procurement sheet",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["7D"]
         }
       ]

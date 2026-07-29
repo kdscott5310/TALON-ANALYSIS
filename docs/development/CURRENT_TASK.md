@@ -1,72 +1,68 @@
 # Current Task
 
-> **Active package: `7D` — Sizing & candidate selection**
-> This is the *only* active work package. Do not start 7E or anything later.
-> When 7D is complete and merged, advance this file and `status.json` to 7E.
+> **Active package: `7E` — BOM & procurement sheet (closes M7)**
+> This is the *only* active work package. When 7E is complete and merged, M7 is
+> done — advance `status.json` and pick the next milestone.
 
 ## Previously completed
 
 - **Milestone 6 (6A–6H) — COMPLETE.**
-- **7A** library store & browse · **7B** record & property editor ·
-  **7C — Import/export & source adapters UI — DONE (2026-07-24).**
-  `mergeIncomingLibrary` (imports merge, verified-overwrite refused) +
-  `LibraryIoPanel` (JSON/CSV export/import, adapter compliance read-only). 413
-  tests. See `DECISIONS.md` D-014.
+- **7A** library store & browse · **7B** record & property editor · **7C**
+  import/export & source adapters ·
+- **7D — Sizing & candidate selection — DONE (2026-07-24).**
+  `LibrarySizingPanel` over `calculations/componentSizing.sizeComponent`: shows
+  every candidate with published/derated rating, utilization, margin,
+  verification, controlling criterion; never auto-picks the smallest; missing→
+  insufficient; verified-required excludes seeds. 418 tests. See `DECISIONS.md`
+  D-015.
 
-## Objective (7D)
+## Objective (7E)
 
-Turn a calculated **demand** into **ranked hardware candidates** from the
-library, using the built-and-tested sizing engine
-(`calculations/componentSizing.ts`). Show each candidate's demand, published
-rating, derated rating, utilization, and the controlling criterion — honestly.
+Assemble a **bill of materials** from sizing results and generate a
+**procurement search sheet / RFQ**, distinguishing calculated requirement /
+recommended minimum / selected component / verified component. A demand with no
+passing candidate becomes a **procurement line**, never a fabricated part.
 
 ## In scope
 
-1. A sizing UI: enter/select a demand (force, e.g. a cable tension or hook
-   resultant — optionally seeded from a CUFTS analysis run) and a design factor,
-   pick a component category, and run the sizing engine over the library
-   records in that category.
-2. Show every candidate ranked (by margin), each with: manufacturer/model/part,
-   demand, published rating, derated rating, utilization, controlling criterion,
-   verification state, and source. **Never auto-select the smallest passing
-   part** — show all candidates and the assumptions.
-3. Exclude obsolete/unverified candidates when verified data is required; a
-   candidate with a **missing** rating is *insufficient information*, never
-   "adequate".
-4. Tests per `TEST_REQUIREMENTS.md` §7D.
+1. Collect one or more sizing results (extend the 7D flow to keep a list of
+   demands, or size several categories) and call `assembleBom`
+   (`calculations/componentSizing.ts`) to build BOM lines.
+2. A procurement output via `reports/procurementSheet.ts`: search-phrase
+   generator, RFQ text, and CSV that mark unselected demands PROCUREMENT
+   REQUIRED and distinguish calculated requirement / recommended minimum /
+   selected / verified.
+3. Export the BOM/procurement sheet as CSV (reuse the `triggerDownload`/download
+   pattern) and show the RFQ text.
+4. Tests per `TEST_REQUIREMENTS.md` §7E.
 
 ## Out of scope
 
-- BOM assembly / procurement sheet / RFQ (7E).
-- Wiring the optimizer (M12) — sizing only.
-- Deriving demands from custom-project analysis (custom analysis is deferred);
-  demands may be entered manually or taken from a CUFTS run.
+- New engineering math (the sizing + procurement engines exist).
+- Optimization (M12), cost roll-up beyond what `procurementSheet` provides.
 
 ## Files to read (only these)
 
-- `src/calculations/componentSizing.ts` — the sizing engine: required rating =
-  demand × design factor, deratings, ranking, exclusions, missing→insufficient.
-  (Read its exact input/output types before wiring — do not change it.)
-- `src/core/library/componentLibrary.ts` — `selectRecords`, record ratings,
-  `isRecordVerified`.
-- `src/state/libraryStore.ts`, `src/core/projectRun.ts` (a run's scalars can
-  seed a demand), `src/units/units.ts`.
-- `src/components/LibraryBrowser.tsx` / a new sizing component; where to mount.
+- `src/reports/procurementSheet.ts` — search-phrase / RFQ / CSV generators and
+  the four-way distinction (read its exact API; do not change it).
+- `src/calculations/componentSizing.ts` — `assembleBom`, `SizingResult`,
+  `SizedBomLine`.
+- `src/components/LibrarySizingPanel.tsx` — the 7D sizing flow to build on.
+- `src/components/LibraryIoPanel.tsx` / `FixtureEditor.tsx` — download helper to
+  mirror.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` pass (≥ 413 + new 7D tests).
-- Candidates are ranked without auto-picking the smallest passing part;
-  obsolete/unverified excluded when verified data is required; a missing rating
-  never reads as adequate.
-- Each candidate shows demand, published & derated rating, utilization, and the
-  controlling criterion.
-- No engineering math in UI (Rules 2/7) — the sizing engine does the math; no
+- `npm run build` and `npm test` pass (≥ 418 + new 7E tests).
+- BOM/procurement outputs carry the calculated requirement / recommended minimum
+  / selected / verified distinction; unselected demands are marked PROCUREMENT
+  REQUIRED; no fabricated parts for no-candidate demands.
+- CSV/RFQ export works; no engineering math in UI (Rules 2/7); no
   `src/calculations/` changes; `src/core/` changes additive and recorded.
 
 ## Definition of done
 
 1. Code + tests within scope; `npm test` and `npm run build` green.
 2. Decisions recorded in `DECISIONS.md`.
-3. `status.json` and this file advanced to mark 7D DONE and 7E ACTIVE.
+3. `status.json` and this file advanced to mark 7E DONE and **M7 complete**.
 4. Single package-scoped commit.

@@ -15,6 +15,28 @@ Format:
 
 ---
 
+## D-015 — 7D sizing UI presents every candidate; the engine does the math  (2026-07-24, 7D)
+
+**Decision.** `LibrarySizingPanel` collects a demand (label, category, rating
+key, demand value in active force units, design factor, optional derating,
+require-verified) and calls the tested `calculations/componentSizing.sizeComponent`
+over the library. It renders **every** candidate (pass / fail / insufficient /
+excluded) with published rating, derated rating, utilization, margin,
+verification state, and controlling criterion — never auto-selecting the
+smallest passing part. No math in the component (Rules 2/7).
+
+**Scope.** 7D covers force-valued ratings (MBS/WLL/rated capacity/proof/force
+capacity) — the common sizing case; demand is entered manually (seeding a demand
+from a CUFTS run is a later nicety, and custom-project analysis stays deferred).
+BOM/procurement output is 7E (`assembleBom` already exists for it).
+
+**Consequences.** No `src/core/` or `src/calculations/` changes — the panel
+consumes the engine. Browser-verified: example rope shows honest fail (50000 lbf
+required vs 29225 lbf derated, 171% util, exampleOnly); lowering demand → pass;
+require-verified → excludedUnverified; no console errors. `librarySizing.test.ts`
+pins the seed-data honesty rules, missing→insufficient, margin-ranking (largest
+first, not smallest passing), and published-vs-derated separation.
+
 ## D-014 — 7C imports MERGE through mergeRecord; adapters shown read-only  (2026-07-24, 7C)
 
 **Decision.** Library import (JSON or CSV) **merges** into the current library
