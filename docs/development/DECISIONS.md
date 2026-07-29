@@ -15,6 +15,27 @@ Format:
 
 ---
 
+## D-012 — 7A library store mirrors the project-store persistence pattern  (2026-07-24, 7A)
+
+**Decision.** `state/libraryStore.ts` is a Zustand store over `core/library`,
+mounted beside the project and v1 stores under its own key `talon-library-v1`.
+It seeds the EXAMPLE-ONLY library on first run and persists via the validated
+`libraryIo` path (`exportLibraryJson`/`importLibraryJson`), so corrupt saved
+data is re-validated on load and dropped with a visible notice — same recovery
+pattern as `projectStore` (D-002). `LibraryBrowser` is a new "Component Library"
+tab: category filter, per-record verification badge (`recordVerificationState` +
+`STATE_LABEL`), provenance summary, and the `auditLibrary` warnings.
+
+**Honesty.** Seeds render "EXAMPLE ONLY / NOT FOR DESIGN" and are never shown as
+verified (`isRecordVerified` false); the audit flags each as critical. Browse
+is read-only; record/property editing is 7B, import/export + adapters 7C.
+
+**Consequences.** No `src/core/` or `src/calculations/` changes — the store and
+UI consume existing library modules. Browser-verified: 6 example-only records,
+6 NOT-FOR-DESIGN badges, 6 critical warnings, working category filter, no
+console errors. `libraryStore.test.ts` covers seed/persist/recover, the
+seeds-never-verified guarantee, the audit, and category filtering.
+
 ## D-011 — 6H closes M6: project file I/O, v1 migration, exact-equality regression  (2026-07-24, 6H)
 
 **Decision.** 6H adds project JSON export/import and v1-scenario migration in the

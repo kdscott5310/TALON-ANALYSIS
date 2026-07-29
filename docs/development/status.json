@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "7A",
+  "activePackage": "7B",
   "baseline": {
-    "tests": 392,
+    "tests": 400,
     "phaseStartTests": 334,
-    "testFiles": 29,
+    "testFiles": 30,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -148,13 +148,20 @@
         {
           "id": "7A",
           "title": "Library store & browse",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 400,
+          "artifacts": [
+            "src/state/libraryStore.ts",
+            "src/components/LibraryBrowser.tsx",
+            "src/tests/libraryStore.test.ts"
+          ],
           "dependsOn": ["6A"]
         },
         {
           "id": "7B",
           "title": "Record & property editor with provenance",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["7A"]
         },
         {

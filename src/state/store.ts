@@ -21,7 +21,8 @@ export type WorkflowTab =
   | 'compare'
   | 'report'
   | 'validation'
-  | 'editor';
+  | 'editor'
+  | 'library';
 
 export interface StoredScenario {
   id: string;
