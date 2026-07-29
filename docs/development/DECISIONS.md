@@ -15,6 +15,29 @@ Format:
 
 ---
 
+## D-013 — 7B edits records on a draft, commits via mergeRecord's refusal gate  (2026-07-24, 7B)
+
+**Decision.** Record editing uses pure helpers in `core/library/recordEdits.ts`
+(`blankRecord`/`setRecordProperty`/`removeRecordProperty`/`updateRecordProvenance`/
+`updateRecordFields`) applied to a local DRAFT, committed once via `mergeRecord`.
+The verified-never-overwritten-by-unverified rule (Rule 12) is enforced by
+`mergeRecord` and **surfaced** — a refused save shows the returned reason and
+keeps the draft so the user can fix the state. Property value + verification
+state reuse the 6F `updatedQuantity` (missing → null, source value preserved).
+
+**Why draft-then-commit.** A single `mergeRecord` per save keeps the audit
+history/revision from being spammed by keystrokes and surfaces the refusal once.
+Property value inputs hold local text (Apply → draft) to avoid unit-conversion
+jitter. `markObsolete` retires a record (kept for history, excluded from
+selection).
+
+**Consequences.** New core module `core/library/recordEdits.ts` (additive, pure).
+Browser-verified: created a record (auto-slug id, provisional), added a property
+50000 lbf → 222411 N (userVerified), saved and persisted across reload; no
+console errors. `libraryRecordEdits.test.ts` covers the helpers, the
+verified-overwrite refusal + reason, source-value preservation, obsolete→excluded
+from selection, and the edited-library JSON round-trip.
+
 ## D-012 — 7A library store mirrors the project-store persistence pattern  (2026-07-24, 7A)
 
 **Decision.** `state/libraryStore.ts` is a Zustand store over `core/library`,

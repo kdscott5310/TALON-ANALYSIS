@@ -17,6 +17,7 @@ import {
   type ComponentRecord,
 } from '../core/library/componentLibrary';
 import { STATE_LABEL, isVerified, type VerificationState } from '../core/provenance';
+import { NewRecordForm, RecordEditor } from './LibraryRecordEditor';
 
 const ALL = '__all__';
 
@@ -86,6 +87,8 @@ export function LibraryBrowser() {
         </div>
       </section>
 
+      <NewRecordForm />
+
       {shown.length === 0 ? (
         <p className="note">No records in this category.</p>
       ) : (
@@ -101,6 +104,7 @@ function RecordCard({ record, warnings }: { record: ComponentRecord; warnings: s
   const state = recordVerificationState(record);
   const verified = isRecordVerified(record);
   const p = record.provenance;
+  const [editing, setEditing] = useState(false);
 
   return (
     <section className="results-panel">
@@ -108,7 +112,12 @@ function RecordCard({ record, warnings }: { record: ComponentRecord; warnings: s
         {record.name}{' '}
         <span className={stateBadgeClass(state)}>{STATE_LABEL[state]}</span>
         {!verified && <span className="badge-unverified"> NOT FOR DESIGN</span>}
+        <button type="button" className="link-btn no-print" onClick={() => setEditing((v) => !v)}>
+          {editing ? 'close' : 'edit'}
+        </button>
       </h2>
+
+      {editing && <RecordEditor record={record} onClose={() => setEditing(false)} />}
       <p className="note">
         {record.category}
         {record.manufacturer ? ` · ${record.manufacturer}` : ''}

@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "7B",
+  "activePackage": "7C",
   "baseline": {
-    "tests": 400,
+    "tests": 407,
     "phaseStartTests": 334,
-    "testFiles": 30,
+    "testFiles": 31,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -161,13 +161,20 @@
         {
           "id": "7B",
           "title": "Record & property editor with provenance",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 407,
+          "artifacts": [
+            "src/core/library/recordEdits.ts",
+            "src/components/LibraryRecordEditor.tsx",
+            "src/tests/libraryRecordEdits.test.ts"
+          ],
           "dependsOn": ["7A"]
         },
         {
           "id": "7C",
           "title": "Import/export & source adapters UI",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["7A"]
         },
         {

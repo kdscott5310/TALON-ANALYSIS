@@ -247,4 +247,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .tab:focus-visi
 .run-header { font-size: 0.74rem; background: #f8fafc; border: 1px solid var(--line); border-radius: 4px; padding: 8px; overflow-x: auto; white-space: pre; }
 .file-import { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
 .file-import input[type=file] { display: none; }
+.record-editor { border: 1px solid var(--accent); border-radius: 6px; padding: 8px; margin: 6px 0; }
+.prop-row.add-prop input[type=text], .prop-row.add-prop input:not([type]) { width: 150px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.82rem; }
+.prop-row input:not([type=number]) { padding: 3px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.82rem; }
 @media (max-width: 900px) { .inspector { grid-template-columns: 1fr; } }
