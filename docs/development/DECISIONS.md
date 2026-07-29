@@ -15,6 +15,31 @@ Format:
 
 ---
 
+## D-014 — 7C imports MERGE through mergeRecord; adapters shown read-only  (2026-07-24, 7C)
+
+**Decision.** Library import (JSON or CSV) **merges** into the current library
+via `mergeIncomingLibrary` (new pure helper in `core/library/recordEdits.ts`)
+rather than replacing it, so the verified-never-overwritten rule (Rule 12)
+applies per record — refused records are reported (count + reason), never
+silently applied or dropped. File type is chosen by extension (`.csv` →
+`importLibraryCsv`, else `importLibraryJson`); malformed files are rejected with
+a visible reason. `LibraryIoPanel` also renders the source-adapter contract
+read-only.
+
+**Honesty.** CSV rows enter `importedUnverified` and an empty cell is *missing*
+not 0 (handled by `libraryIo`); the UI states this. The adapter section shows
+`BUILT_IN_ADAPTERS` with `validateAdapter` verdicts and says no network adapter
+ships, online data is importedUnverified, search snippets are refused as proof,
+and access-control-bypassing adapters are refused (Rule 12 / R-9).
+
+**Consequences.** `recordEdits.ts` gains `mergeIncomingLibrary` (additive, pure).
+Browser-verified: JSON re-import → 0 added / 7 updated; CSV import → 1 added,
+record importedUnverified, mbs 50000 N, diameter missing (null, not 0); adapter
+table shows both shipped adapters network-disabled/accepted; exports download; no
+console errors. `libraryIoMerge.test.ts` covers the merge, the refusal path, the
+JSON round-trip, the CSV empty→missing/importedUnverified rules, and adapter
+compliance.
+
 ## D-013 — 7B edits records on a draft, commits via mergeRecord's refusal gate  (2026-07-24, 7B)
 
 **Decision.** Record editing uses pure helpers in `core/library/recordEdits.ts`

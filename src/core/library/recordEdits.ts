@@ -10,7 +10,7 @@
  */
 import type { ComponentCategory } from '../model';
 import type { Provenance, VerificationState } from '../provenance';
-import type { ComponentProperty, ComponentRecord } from './componentLibrary';
+import { mergeRecord, type ComponentLibrary, type ComponentProperty, type ComponentRecord } from './componentLibrary';
 
 /** Creates a blank, property-less record with a working (provisional) provenance. */
 export function blankRecord(spec: {
@@ -63,4 +63,41 @@ export function updateRecordFields(
   patch: Partial<Pick<ComponentRecord, 'name' | 'manufacturer' | 'model' | 'partNumber' | 'description' | 'notes'>>,
 ): ComponentRecord {
   return { ...record, ...patch };
+}
+
+export interface LibraryMergeSummary {
+  library: ComponentLibrary;
+  added: number;
+  updated: number;
+  /** Records refused (a verified record is never overwritten by unverified data). */
+  refused: { id: string; reason: string }[];
+  notes: string[];
+}
+
+/**
+ * Merges every record from an imported library into the current one via
+ * `mergeRecord`, so the verified-never-overwritten-by-unverified rule (Rule 12)
+ * applies to imports: a refused record is reported, not silently applied.
+ */
+export function mergeIncomingLibrary(
+  current: ComponentLibrary,
+  incoming: ComponentLibrary,
+): LibraryMergeSummary {
+  let library = current;
+  let added = 0;
+  let updated = 0;
+  const refused: { id: string; reason: string }[] = [];
+  const notes: string[] = [];
+  for (const record of incoming.records) {
+    const outcome = mergeRecord(library, record);
+    if (outcome.ok) {
+      library = outcome.library;
+      if (outcome.action === 'added') added++;
+      else updated++;
+      notes.push(...outcome.notes);
+    } else {
+      refused.push({ id: record.id, reason: outcome.reason });
+    }
+  }
+  return { library, added, updated, refused, notes };
 }

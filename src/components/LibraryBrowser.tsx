@@ -18,6 +18,7 @@ import {
 } from '../core/library/componentLibrary';
 import { STATE_LABEL, isVerified, type VerificationState } from '../core/provenance';
 import { NewRecordForm, RecordEditor } from './LibraryRecordEditor';
+import { LibraryIoPanel } from './LibraryIoPanel';
 
 const ALL = '__all__';
 
@@ -87,6 +88,7 @@ export function LibraryBrowser() {
         </div>
       </section>
 
+      <LibraryIoPanel />
       <NewRecordForm />
 
       {shown.length === 0 ? (

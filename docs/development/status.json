@@ -2,11 +2,11 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "7C",
+  "activePackage": "7D",
   "baseline": {
-    "tests": 407,
+    "tests": 413,
     "phaseStartTests": 334,
-    "testFiles": 31,
+    "testFiles": 32,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -174,13 +174,20 @@
         {
           "id": "7C",
           "title": "Import/export & source adapters UI",
-          "status": "active",
+          "status": "done",
+          "completedOn": "2026-07-24",
+          "tests": 413,
+          "artifacts": [
+            "src/core/library/recordEdits.ts (mergeIncomingLibrary)",
+            "src/components/LibraryIoPanel.tsx",
+            "src/tests/libraryIoMerge.test.ts"
+          ],
           "dependsOn": ["7A"]
         },
         {
           "id": "7D",
           "title": "Sizing & candidate selection",
-          "status": "todo",
+          "status": "active",
           "dependsOn": ["7A", "6G"]
         },
         {
