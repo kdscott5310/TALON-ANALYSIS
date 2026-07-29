@@ -22,7 +22,8 @@ export type WorkflowTab =
   | 'report'
   | 'validation'
   | 'editor'
-  | 'library';
+  | 'library'
+  | 'brakeCurves';
 
 export interface StoredScenario {
   id: string;

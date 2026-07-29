@@ -14,6 +14,7 @@ import { ReportView } from './components/ReportView';
 import { ValidationView } from './components/ValidationView';
 import { FixtureEditor } from './components/FixtureEditor';
 import { LibraryBrowser } from './components/LibraryBrowser';
+import { BrakeCurvePanel } from './components/BrakeCurvePanel';
 import { DISCLAIMER } from './models/scenario';
 
 // The 3D view pulls in Three.js; lazy-load so it stays out of the main bundle.
@@ -31,6 +32,7 @@ const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'validation', label: 'Validation' },
   { id: 'editor', label: 'Fixture Editor' },
   { id: 'library', label: 'Component Library' },
+  { id: 'brakeCurves', label: 'Brake Curves' },
 ];
 
 export default function App() {
@@ -163,6 +165,8 @@ export default function App() {
       {activeTab === 'editor' && <FixtureEditor />}
 
       {activeTab === 'library' && <LibraryBrowser />}
+
+      {activeTab === 'brakeCurves' && <BrakeCurvePanel />}
 
       <footer className="disclaimer no-print">{DISCLAIMER}</footer>
     </div>

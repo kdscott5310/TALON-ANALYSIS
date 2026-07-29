@@ -2,12 +2,12 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "none",
-  "phaseComplete": true,
+  "activePackage": "8B",
+  "phaseComplete": false,
   "baseline": {
-    "tests": 421,
+    "tests": 427,
     "phaseStartTests": 334,
-    "testFiles": 34,
+    "testFiles": 35,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -210,6 +210,27 @@
           ],
           "dependsOn": ["7D"]
         }
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "Advanced analysis UIs (surface L2 engines)",
+      "status": "in_progress",
+      "packages": [
+        { "id": "8A", "title": "Brake curves & stopping simulation", "status": "done", "completedOn": "2026-07-24", "tests": 427, "artifacts": ["src/calculations/brakeStopSim.ts", "src/components/BrakeCurvePanel.tsx", "src/tests/brakeStopSim.test.ts"], "dependsOn": [] },
+        { "id": "8B", "title": "Coupled dynamics (wheel inertia + payload pendulum)", "status": "active", "dependsOn": [] },
+        { "id": "8C", "title": "Optimization over CUFTS parameters (+ objective adapter)", "status": "todo", "dependsOn": [] },
+        { "id": "8D", "title": "Digital twin (measured-data correlation)", "status": "todo", "dependsOn": [] }
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Git-based design sharing & standards",
+      "status": "not_started",
+      "note": "Client-only/no-backend: app reads/writes JSON files; engineers version them in a shared Git repo. Standards sync first, then project drafts (user direction).",
+      "packages": [
+        { "id": "9A", "title": "Standards library import/sync (design factors, load combos, verification policy)", "status": "todo", "dependsOn": [] },
+        { "id": "9B", "title": "Project draft library & save/load/export for repo sharing", "status": "todo", "dependsOn": [] }
       ]
     }
   ]

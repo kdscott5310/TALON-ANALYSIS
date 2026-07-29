@@ -1,48 +1,68 @@
 # Current Task
 
-> **No active package. Milestones 6 and 7 are both COMPLETE.**
-> Pick the next milestone/work before setting an active package here and in
-> `status.json`.
+> **Active package: `8B` — Coupled dynamics (wheel inertia + payload pendulum)**
+> Only 8B is active. When complete, advance to 8C (optimization).
 
-## Milestones 6 & 7 — COMPLETE (2026-07-24)
+## Previously completed (this phase)
 
-**M6 — Generalized platform + graphical fixture editor (6A–6H):** project store,
-template gallery, 2D editor canvas, node/element editing on authoritative custom
-projects, supports/constraints/loads, dimensioned property editing with
-provenance, analysis runs + fidelity badges (CUFTS), and project file I/O + v1
-migration + the exact-equality CUFTS regression.
+- **8A — Brake curves & stopping simulation — DONE (2026-07-24).** New additive
+  `calculations/brakeStopSim.ts` (reduced-order 1-DOF stop) + `BrakeCurvePanel`
+  on a new "Brake Curves" tab; author/import a curve, preview, simulate the
+  stop. v1 CUFTS untouched. 427 tests. See `DECISIONS.md` D-018.
+- Milestones 6 & 7 complete.
 
-**M7 — Component library + procurement (7A–7E):** library store & browse,
-record & property editor (verified-overwrite refusal surfaced), import/export &
-source-adapter compliance, sizing & candidate selection, and BOM + procurement
-search sheet / RFQ.
+## Objective (8B)
 
-421 tests, build clean, production audit 0. The validated v1 CUFTS UI and its
-Level-1 results are unchanged throughout. Decisions D-001…D-016.
+Give the coupled-dynamics engines a UI: **wheel rotational inertia**
+(`calculations/wheelDynamics.ts`) and the **damped payload pendulum**
+(`calculations/payloadPendulum.ts`), both Level 2. Let the user enter the data
+these need (wheel inertia/radius/count, payload mass/suspension/damping, drive
+inputs) — which migrated CUFTS projects mark **missing** — and show results
+honestly (insufficient information until entered). Zero wheel inertia must
+reduce EXACTLY to the M3 point-mass result.
 
-## Candidate next work (not yet scheduled)
+## In scope
 
-Pick one and write a package brief here + set the active pointer in
-`status.json` before implementing.
+1. A UI (new tab or a section) collecting the wheel-inertia inputs and running
+   `wheelDynamics` (effective-mass, rotational energy, wheel speed); show the
+   effective mass and how it changes the stop/energy vs the point mass.
+2. A payload-pendulum panel running `payloadPendulum` (longitudinal + lateral
+   damped swing): inputs (payload mass, suspension length, damping, trolley
+   accel/brake decel, crosswind), outputs (peak angles, displacement envelope,
+   attachment reaction, natural period, settling time, ground-clearance rise,
+   swing warnings) + a small time-history plot.
+3. Missing required inputs → *insufficient information*, never 0. Values in the
+   active unit system.
+4. Tests per `TEST_REQUIREMENTS.md` §8B (add a section).
 
-- **Custom-project analysis** — wire `calculations/trussFEM.ts` (2D truss
-  direct-stiffness, Level 2) to custom projects, with honest applicability when
-  E·A / restraints / loads are missing (deferred in 6G, D-010).
-- **Durable analysis-run history** — persist frozen `AnalysisRun`s (6G holds
-  them in view state only).
-- **Surface the M8–M17 engines** — nonlinear cable (M8), coupled dynamics
-  (M9), brake curves (M10), lateral cable (M11), uncertainty/optimization (M12),
-  FMEA/hazard register (M14), digital-twin correlation (M16), truss/FEA export
-  (M17) all have tested cores but limited/no UI beyond what M6/M7 added.
-- **CUFTS→editor bridge** — let the fixture editor open the migrated CUFTS
-  project's geometry read-only alongside its analysis (today CUFTS geometry is
-  derived and read-only; the editor edits custom projects).
+## Out of scope
 
-## How to start the next package
+- Full coupling of the pendulum reaction back into the trolley/cable run (that
+  is the M11 reduced-order 3D model, separate).
+- Changing the validated v1 dynamics solver or its results.
 
-1. Choose the package; write its brief in this file (objective, in/out of scope,
-   files to read, acceptance, DoD) as for 6A–7E.
-2. Set `activePackage` + the package `status: "active"` in `status.json`
-   (clear `phaseComplete`).
-3. Branch `milestone-<id>-<slug>`, implement, test, browser-verify, record a
-   decision, commit, merge to `main`, push.
+## Files to read (only these)
+
+- `src/calculations/wheelDynamics.ts` — inputs/outputs, effective-mass formula,
+  zero-inertia reduction (do not change).
+- `src/calculations/payloadPendulum.ts` — inputs/outputs, damped RK4 (do not
+  change).
+- `src/units/units.ts` — display; `src/App.tsx` / `src/state/store.ts` — tab.
+- `src/components/BrakeCurvePanel.tsx` — pattern for an analysis panel + plot.
+
+## Acceptance criteria
+
+- `npm run build` and `npm test` pass (≥ 427 + new 8B tests).
+- Zero wheel inertia reduces exactly to the point-mass result; the pendulum
+  matches the small-angle period T = 2π√(L/g) (engine already tested — assert
+  the wiring surfaces these honestly).
+- Missing inputs render as insufficient information, never 0; no engineering
+  math in the component (Rules 2/7); no `src/calculations/` changes;
+  `src/core/` changes additive and recorded.
+
+## Definition of done
+
+1. Code + tests within scope; `npm test` and `npm run build` green.
+2. Decisions recorded in `DECISIONS.md`.
+3. `status.json` and this file advanced to mark 8B DONE and 8C ACTIVE.
+4. Single package-scoped commit.

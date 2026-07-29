@@ -15,6 +15,40 @@ Format:
 
 ---
 
+## D-017 — Phase M8/M9: surface L2 engines + git-based sharing  (2026-07-24, planning)
+
+**Decision (user-directed).** New phase after M6/M7: **M8** surfaces four tested
+Level-2 engines with UI — brake curves, coupled dynamics, optimization, digital
+twin (build order: brake curves first) — and **M9** adds design/standards
+sharing. For sharing the user chose **git-based** over a cloud backend: the app
+stays client-only/no-backend and reads/writes JSON files that engineers version
+in a shared Git repo ("latest draft" = latest pull); standards sync first, then
+project drafts. A real-time multi-user backend was explicitly deferred (hosting/
+auth/cost/security review; I also cannot create accounts or enter credentials).
+
+## D-018 — 8A brake curves add an ADDITIVE 1-DOF stop sim; v1 untouched  (2026-07-24, 8A)
+
+**Decision.** So the brake curve produces a real result without touching the
+validated v1 CUFTS RK4 solver (Rule 1), 8A adds a NEW pure module
+`calculations/brakeStopSim.ts` — a reduced-order 1-DOF stop (RK4) driven by the
+tabulated curve. `BrakeCurvePanel` (new "Brake Curves" tab) authors/imports a
+curve, previews it, and runs the sim. Level 2, never certified.
+
+**Honesty + a fix.** Force is clamped at the curve endpoints, never extrapolated.
+The sim reads force via the low-level `interpolateCurve` and **summarises**
+extrapolation/over-rating into ONE warning each — an initial version bubbled the
+engine's per-step warning and flooded the panel with thousands of lines
+(caught in browser verification). Overrun of the available stroke and
+did-not-stop are reported; a constant-force curve matches the analytic
+v²/(2a) stop.
+
+**Consequences.** No existing `src/calculations` solver changed; v1 CUFTS
+results unchanged. Wiring a tabulated brake into the full path-following run is a
+later package. Browser-verified: default stop (1.6 ft / 0.15 s / 4.95 g, energy
+balances), single rating warning, overrun + clamp warnings; no console errors.
+`brakeStopSim.test.ts` (6) covers analytic agreement, determinism, clamp,
+rating, overrun, and invalid input.
+
 ## D-016 — 7E BOM/procurement from an in-view sizing basket (closes M7)  (2026-07-24, 7E)
 
 **Decision.** The sizing panel (7D) gains an "add to BOM" action that pushes its
