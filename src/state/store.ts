@@ -24,6 +24,7 @@ export type WorkflowTab =
   | 'editor'
   | 'library'
   | 'brakeCurves'
+  | 'coupledDynamics'
   | 'standards';
 
 export interface StoredScenario {

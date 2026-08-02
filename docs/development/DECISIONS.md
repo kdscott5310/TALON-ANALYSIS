@@ -26,6 +26,36 @@ in a shared Git repo ("latest draft" = latest pull); standards sync first, then
 project drafts. A real-time multi-user backend was explicitly deferred (hosting/
 auth/cost/security review; I also cannot create accounts or enter credentials).
 
+## D-021 — 8B coupled dynamics: blank inputs are *not entered*, never 0  (2026-07-30, 8B)
+
+**Decision.** `CoupledDynamicsPanel` (new "Coupled Dynamics" tab) surfaces the
+two tested Level-2 engines — `wheelDynamics` (effective mass m + I/r², rotational
+energy, wheel speed) and `payloadPendulum` (pitch/sway, envelope, attachment
+reaction, period, settling, ground clearance). All math stays in the engines
+(Rules 2/7); the panel converts units and renders.
+
+**Missing-data handling.** The data migrated CUFTS projects mark *missing*
+(rolling radius, wheel mass/inertia, suspension length, damping ratio) is entered
+here. A blank field parses to `null`, the section renders
+**"insufficient information — enter: …"** naming each missing input, and the
+solve button is disabled — a blank is never coerced to 0 (Rules 3/4). Optional
+ground clearance stays `null` ("not evaluated") rather than 0, and an undamped
+swing reports "does not settle" instead of a settling time.
+
+**Pendulum drive.** The panel synthesises a braking pulse (constant deceleration
+for a duration, then coast) as the trolley acceleration history, so the pendulum
+is usable standalone. Feeding a real CUFTS run's acceleration history in, and
+coupling the reaction back into the cable, remain out of scope (M11).
+
+**Consequences.** No existing solver modified; no `src/core` change. Browser-
+verified in SI against hand calcs: I = 4·0.5·8·0.15² = 0.36 kg·m², I/r² = 16 kg,
+m_eff = 916 kg (+1.8%), ω = 80 rad/s, E = 1.2 kJ; pendulum period 4.01 s =
+2π√(L/g) exactly, 41.2° peak pitch under a 4 m/s² brake pulse, settling 22 s; no
+console errors. `coupledDynamicsUi.test.ts` (9) pins zero-inertia exact
+reduction, the geometry formula, angular speed, loud failure on invalid input,
+the analytic period, damped-vs-undamped settling, determinism, and
+clearance-null-not-zero.
+
 ## D-020 — 9B named project drafts as snapshots (closes M9)  (2026-07-30, 9B)
 
 **Decision.** `core/projectDrafts.ts` (new, pure) adds a draft library: named,
