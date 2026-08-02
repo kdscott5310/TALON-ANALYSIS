@@ -26,6 +26,36 @@ in a shared Git repo ("latest draft" = latest pull); standards sync first, then
 project drafts. A real-time multi-user backend was explicitly deferred (hosting/
 auth/cost/security review; I also cannot create accounts or enter credentials).
 
+## D-020 — 9B named project drafts as snapshots (closes M9)  (2026-07-30, 9B)
+
+**Decision.** `core/projectDrafts.ts` (new, pure) adds a draft library: named,
+timestamped **snapshots** of a Project, with save/update/rename/duplicate/delete
+and newest-first ordering so "the latest draft" is simply `[0]`. The project
+store gains `drafts` + `activeDraftId` and the matching actions, persisted under
+its own key `talon-project-drafts-v1` with corrupt-data recovery.
+`ProjectDraftsPanel` (in the Fixture Editor, above the 6H file panel) lists
+drafts and can load, rename, duplicate, export, or delete each one.
+
+**Snapshot isolation.** Saving and loading deep-copy the project, so editing the
+live project never mutates a saved draft and loading a draft never aliases it —
+asserted in tests. Individually malformed stored drafts are DROPPED with a
+disclosed note; an unreadable payload recovers to an empty library with a
+visible notice (Rule 10).
+
+**Sharing (Git).** Per D-017 the app stays client-only: a draft is exported as
+`talon-project` JSON, committed/pushed to the shared repo, then pulled and
+imported by a colleague. Git history is the version trail; TALON does not merge
+two engineers' edits — conflicts resolve like code. Automatic Git operations
+from the browser and a live multi-user backend remain out of scope.
+
+**Consequences.** No `src/calculations` changes; core addition is additive.
+Browser-verified: saved "Baseline v1", switched the live project to a Custom
+project, saved a second draft, loaded the baseline back (restored exactly, with
+a notice), and both drafts survived reload ordered newest-first.
+`projectDrafts.test.ts` (10) covers the ops, ordering, snapshot isolation,
+serialization + malformed handling, the export→import sharing path, persistence
+recovery, and store wiring. **Milestone 9 complete.**
+
 ## D-019 — 9A standards as a shared, Git-versioned JSON document  (2026-07-24, 9A)
 
 **Decision (user chose standards-first).** Pivoted from the analysis stream to

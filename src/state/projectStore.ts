@@ -27,11 +27,25 @@ import {
   exportProjectJson as serializeProject,
   importProjectJson as parseProjectJson,
 } from '../core/projectSerialization';
+import {
+  createDraftLibrary,
+  deleteDraft as deleteDraftOp,
+  duplicateDraft as duplicateDraftOp,
+  findDraft,
+  parseDraftLibrary,
+  renameDraft as renameDraftOp,
+  saveNewDraft,
+  serializeDraftLibrary,
+  updateDraft as updateDraftOp,
+  type DraftLibrary,
+} from '../core/projectDrafts';
 import { exampleScenario } from '../models/exampleScenario';
 import { APP_VERSION } from '../version';
 
 /** Dedicated key — must not collide with the v1 scenario store key. */
 export const PROJECT_STORAGE_KEY = 'talon-project-v1';
+/** Saved named drafts (9B), stored separately from the active project. */
+export const DRAFTS_STORAGE_KEY = 'talon-project-drafts-v1';
 
 /** Builds a fresh CUFTS project from the built-in unverified example scenario. */
 export function seedExampleProject(): Project {
@@ -105,6 +119,49 @@ export function persistProject(project: Project): void {
   }
 }
 
+export interface LoadedDrafts {
+  library: DraftLibrary;
+  notices: string[];
+}
+
+/**
+ * Loads the saved draft library. A corrupt payload recovers to an EMPTY library
+ * with a visible notice (never a silent default); individually malformed drafts
+ * are dropped with disclosed notes.
+ */
+export function loadPersistedDrafts(): LoadedDrafts {
+  if (typeof localStorage === 'undefined') return { library: createDraftLibrary(), notices: [] };
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(DRAFTS_STORAGE_KEY);
+  } catch {
+    return { library: createDraftLibrary(), notices: [] };
+  }
+  if (!raw) return { library: createDraftLibrary(), notices: [] };
+
+  const parsed = parseDraftLibrary(raw);
+  if (parsed.ok) {
+    return { library: parsed.library, notices: parsed.notes.map((n) => `Drafts: ${n}`) };
+  }
+  return {
+    library: createDraftLibrary(),
+    notices: [
+      `Saved project drafts were invalid and have been discarded (${
+        parsed.errors[0] ?? 'unknown error'
+      }).`,
+    ],
+  };
+}
+
+export function persistDrafts(library: DraftLibrary): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(DRAFTS_STORAGE_KEY, serializeDraftLibrary(library));
+  } catch {
+    // Storage full or unavailable — the session continues without persistence.
+  }
+}
+
 interface ProjectStoreState {
   /** The single active generalized project. */
   project: Project;
@@ -122,15 +179,33 @@ interface ProjectStoreState {
   /** Serializes the active project to a downloadable JSON string. */
   toProjectJson: () => string;
   dismissNotices: () => void;
+
+  // ── saved drafts (9B) ──
+  /** Named saved versions of the project. */
+  drafts: DraftLibrary;
+  /** Draft the active project was loaded from / last saved to, if any. */
+  activeDraftId: string | null;
+  /** Saves the active project as a NEW named draft. */
+  saveDraft: (name: string, note?: string) => void;
+  /** Overwrites an existing draft with the active project. */
+  updateDraft: (id: string, note?: string) => void;
+  /** Loads a draft into the active project (continue optimizing the latest). */
+  loadDraft: (id: string) => void;
+  renameDraft: (id: string, name: string) => void;
+  duplicateDraft: (id: string) => void;
+  deleteDraft: (id: string) => void;
 }
 
 const initial = loadPersistedProject();
 // Persist a freshly seeded project so a page refresh reloads the same one.
 if (initial.seeded) persistProject(initial.project);
+const initialDrafts = loadPersistedDrafts();
 
 export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   project: initial.project,
-  notices: initial.notices,
+  notices: [...initial.notices, ...initialDrafts.notices],
+  drafts: initialDrafts.library,
+  activeDraftId: null,
 
   setProject: (project) => {
     persistProject(project);
@@ -157,4 +232,56 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   toProjectJson: () => serializeProject(get().project, APP_VERSION),
 
   dismissNotices: () => set({ notices: [] }),
+
+  // ── saved drafts (9B) ──
+
+  saveDraft: (name, note) => {
+    const { drafts, project } = get();
+    const { library, draftId } = saveNewDraft(drafts, project, {
+      name,
+      note,
+      savedOn: new Date().toISOString(),
+    });
+    persistDrafts(library);
+    set({ drafts: library, activeDraftId: draftId });
+  },
+
+  updateDraft: (id, note) => {
+    const { drafts, project } = get();
+    const library = updateDraftOp(drafts, id, project, { savedOn: new Date().toISOString(), note });
+    persistDrafts(library);
+    set({ drafts: library, activeDraftId: id });
+  },
+
+  loadDraft: (id) => {
+    const { drafts } = get();
+    const draft = findDraft(drafts, id);
+    if (!draft) return;
+    // Deep-copy so editing the loaded project never mutates the saved snapshot.
+    const project = JSON.parse(JSON.stringify(draft.project)) as Project;
+    persistProject(project);
+    set({
+      project,
+      activeDraftId: id,
+      notices: [`Loaded draft "${draft.name}" (saved ${new Date(draft.savedOn).toLocaleString()}).`],
+    });
+  },
+
+  renameDraft: (id, name) => {
+    const library = renameDraftOp(get().drafts, id, name);
+    persistDrafts(library);
+    set({ drafts: library });
+  },
+
+  duplicateDraft: (id) => {
+    const { library } = duplicateDraftOp(get().drafts, id, { savedOn: new Date().toISOString() });
+    persistDrafts(library);
+    set({ drafts: library });
+  },
+
+  deleteDraft: (id) => {
+    const library = deleteDraftOp(get().drafts, id);
+    persistDrafts(library);
+    set({ drafts: library, activeDraftId: get().activeDraftId === id ? null : get().activeDraftId });
+  },
 }));

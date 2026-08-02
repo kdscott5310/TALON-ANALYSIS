@@ -1,70 +1,67 @@
 # Current Task
 
-> **Active package: `9B` — Project draft library & save/load for repo sharing**
-> Second package of **M9 — Git-based sharing**. Only 9B is active.
+> **Active package: `8B` — Coupled dynamics (wheel inertia + payload pendulum)**
+> Back to the analysis stream now that collaboration (M9) is complete.
 
-## Previously completed (this phase)
+## Completed in this phase
 
-- **8A — Brake curves & stopping simulation — DONE.**
-- **9A — Standards library import/sync — DONE (2026-07-24).** `core/standards.ts`
-  + `standardsIo.ts` + `standardsStore.ts` + `StandardsPanel` (new "Standards"
-  tab): design factors, allowable limits, verification policy, combination
-  templates; export/import JSON for Git-versioning; starter template flagged.
-  436 tests. See `DECISIONS.md` D-019.
-- Milestones 6 & 7 complete; 8B/8C/8D (coupled dynamics, optimization, digital
-  twin) still queued in the analysis stream.
+- **8A — Brake curves & stopping simulation — DONE.** New additive
+  `calculations/brakeStopSim.ts` + `BrakeCurvePanel` ("Brake Curves" tab).
+- **M9 — Git-based sharing — COMPLETE.**
+  - **9A** standards: `core/standards.ts` / `standardsIo.ts` / `standardsStore.ts`
+    + `StandardsPanel` ("Standards" tab) — export/import JSON for Git-versioning.
+  - **9B** project drafts: `core/projectDrafts.ts` + store `drafts` +
+    `ProjectDraftsPanel` — named snapshots, newest-first, load to continue
+    optimizing, export for repo sharing. See `DECISIONS.md` D-019, D-020.
 
-## Objective (9B)
+446 tests, build clean. Milestones 6 & 7 complete.
 
-Let engineers **keep multiple named project drafts** and **pull up the latest
-draft to continue optimizing** — the "keep what everyone is adjusting" workflow —
-within the client-only/Git-based model. Today `projectStore` holds ONE active
-project; 9B adds a saved-draft **library** with save/load/duplicate/delete and
-export/import for repo sharing (building on 6H's project JSON I/O).
+## Objective (8B)
+
+Give the coupled-dynamics engines a UI: **wheel rotational inertia**
+(`calculations/wheelDynamics.ts`) and the **damped payload pendulum**
+(`calculations/payloadPendulum.ts`), both Level 2. Collect the inputs these need
+(which migrated CUFTS projects mark **missing**) and report results honestly —
+*insufficient information* until real values are entered. Zero wheel inertia
+must reduce EXACTLY to the M3 point-mass result.
 
 ## In scope
 
-1. Extend `state/projectStore.ts` (or a sibling) to hold a **library of named
-   project drafts** (id, name, savedOn, revision) plus the active one, persisted
-   under its own key with corrupt-data recovery. Save current / load / rename /
-   duplicate / delete a draft.
-2. A drafts UI (in the Fixture Editor or a section): list drafts with savedOn,
-   load one to continue editing, save the active project as a new/updated draft.
-3. Reuse 6H export/import: export a draft as `talon-project` JSON to commit to
-   the repo; import a colleague's file as a new draft. Disclose migration notes;
-   malformed rejected with a reason.
-4. A short "latest draft" workflow note (export → commit/push → others pull →
-   import), consistent with the Standards panel.
-5. Tests per `TEST_REQUIREMENTS.md` §9B.
+1. Wheel-inertia inputs + `wheelDynamics` run: effective mass (m + I/r²),
+   rotational energy, wheel angular speed; show the effect vs the point mass.
+2. Payload-pendulum panel running `payloadPendulum`: inputs (payload mass,
+   suspension length, damping, trolley accel / brake decel, crosswind); outputs
+   (peak longitudinal/lateral angles, displacement envelope, attachment
+   reaction, natural period, settling time, ground-clearance rise, swing
+   warnings) + a small time-history plot.
+3. Missing required inputs → insufficient information, never 0. Active unit
+   system throughout.
+4. Tests per `TEST_REQUIREMENTS.md` §8B (add a section).
 
 ## Out of scope
 
-- A real-time multi-user backend / live concurrent editing (deferred, D-017).
-- Automatic Git operations from the browser (the app reads/writes files; the
-  engineer does the pull/commit/push).
-- Merging two engineers' edits automatically (resolve like code / in Git).
+- Coupling the pendulum reaction back into the trolley/cable run (M11 model).
+- Changing the validated v1 dynamics solver or its results.
 
 ## Files to read (only these)
 
-- `src/state/projectStore.ts` — active project + persistence to extend.
-- `src/core/projectSerialization.ts` — `exportProjectJson` / `importProjectJson`.
-- `src/components/FixtureEditor.tsx` — `ProjectFilePanel` (6H) to build on.
-- `src/state/store.ts` — v1 scenario library is a reference pattern for a
-  multi-item store with persistence/recovery.
+- `src/calculations/wheelDynamics.ts` and `src/calculations/payloadPendulum.ts`
+  — inputs/outputs (do not change).
+- `src/components/BrakeCurvePanel.tsx` — pattern for an analysis panel + plot.
+- `src/units/units.ts`; `src/App.tsx` / `src/state/store.ts` — tab wiring.
 
 ## Acceptance criteria
 
-- `npm run build` and `npm test` pass (≥ 436 + new 9B tests).
-- Multiple named drafts persist and survive reload; save/load/rename/duplicate/
-  delete work; corrupt persisted data recovers with a visible notice.
-- Export/import round-trips a draft losslessly (custom projects) and migrates a
-  v1 scenario/CUFTS project with disclosed notes; malformed rejected.
-- No engineering math in UI (Rules 2/7); no `src/calculations/` changes;
-  `src/core/` changes additive and recorded.
+- `npm run build` and `npm test` pass (≥ 446 + new 8B tests).
+- Zero wheel inertia reduces exactly to the point-mass result; the pendulum
+  matches the small-angle period T = 2π√(L/g).
+- Missing inputs render as insufficient information, never 0; no engineering
+  math in the component (Rules 2/7); no existing `src/calculations/` solver
+  modified; `src/core/` changes additive and recorded.
 
 ## Definition of done
 
 1. Code + tests within scope; `npm test` and `npm run build` green.
 2. Decisions recorded in `DECISIONS.md`.
-3. `status.json` and this file advanced to mark 9B DONE (M9 complete).
+3. `status.json` and this file advanced to mark 8B DONE and 8C ACTIVE.
 4. Single package-scoped commit.

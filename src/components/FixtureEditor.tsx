@@ -18,6 +18,7 @@ import { useAppStore } from '../state/store';
 import { APP_VERSION } from '../version';
 import { TemplateGallery } from './TemplateGallery';
 import { EditorCanvas } from './EditorCanvas';
+import { ProjectDraftsPanel } from './ProjectDraftsPanel';
 
 const STATE_LABEL: Record<VerificationState, string> = {
   manufacturerVerified: 'Manufacturer verified',
@@ -207,6 +208,8 @@ export function FixtureEditor() {
           </>
         )}
       </section>
+
+      <ProjectDraftsPanel />
 
       <ProjectFilePanel />
 
