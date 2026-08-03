@@ -16,6 +16,7 @@ import { FixtureEditor } from './components/FixtureEditor';
 import { LibraryBrowser } from './components/LibraryBrowser';
 import { BrakeCurvePanel } from './components/BrakeCurvePanel';
 import { CoupledDynamicsPanel } from './components/CoupledDynamicsPanel';
+import { OptimizationPanel } from './components/OptimizationPanel';
 import { StandardsPanel } from './components/StandardsPanel';
 import { DISCLAIMER } from './models/scenario';
 
@@ -36,6 +37,7 @@ const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'library', label: 'Component Library' },
   { id: 'brakeCurves', label: 'Brake Curves' },
   { id: 'coupledDynamics', label: 'Coupled Dynamics' },
+  { id: 'optimization', label: 'Optimization' },
   { id: 'standards', label: 'Standards' },
 ];
 
@@ -173,6 +175,8 @@ export default function App() {
       {activeTab === 'brakeCurves' && <BrakeCurvePanel />}
 
       {activeTab === 'coupledDynamics' && <CoupledDynamicsPanel />}
+
+      {activeTab === 'optimization' && <OptimizationPanel />}
 
       {activeTab === 'standards' && <StandardsPanel />}
 

@@ -26,6 +26,47 @@ in a shared Git repo ("latest draft" = latest pull); standards sync first, then
 project drafts. A real-time multi-user backend was explicitly deferred (hosting/
 auth/cost/security review; I also cannot create accounts or enter credentials).
 
+## D-022 — 8C optimization: additive objective adapter + disclosed feasibility tolerance  (2026-07-30, 8C)
+
+**Decision.** `calculations/cuftsObjective.ts` (NEW, pure, additive) bridges the
+tested optimizer to the validated v1 solvers: a design-variable vector is applied
+to a *copy* of the scenario, the existing solvers run **unchanged**, and scalar
+metrics are read back. Five variables (pretension, brake force, brake-zone
+length, ballast blocks, design factor), five objectives, seven constraints.
+`OptimizationPanel` ("Optimization" tab) drives it and shows the best design,
+feasibility, controlling constraints, baseline→optimized metrics, local
+sensitivity, and the full search history.
+
+**The v1 guarantee.** Evaluating the BASELINE vector reproduces current v1
+results exactly — `cuftsObjective.test.ts` asserts each metric equals a direct
+solver run, and that `applyVariables(baseline)` deep-equals the scenario. So
+optimization can never silently shift a signed-off number (Rule 1).
+
+**Rejection, not scoring.** An invalid scenario (blocking validation errors) or a
+thrown solver returns non-finite metrics, which the optimizer discards rather
+than scoring (R-6). A trolley that never stops reports an **infinite** stroke,
+never a flatteringly small one.
+
+**Feasibility tolerance (a judgement call, disclosed).** The panel passes
+`feasibilityTolerance = 1e-4` instead of the 1e-6 default. A penalty method
+converges onto an ACTIVE constraint from the infeasible side by a vanishing
+amount: browser verification produced a design flagged "INFEASIBLE — not a valid
+design" over a **2.7e-6 m/s** excess on a ~20 m/s speed limit (relative ~1e-7),
+i.e. line-search noise. Crying wolf at that scale trains engineers to ignore the
+flag, which is itself a safety problem. The tolerance is small, is **disclosed in
+the UI**, and a constraint satisfied only within it is labelled **"at limit
+(active)"** — never "clear". A test pins both halves: noise-level excess is
+feasible, a real (0.05) violation is not.
+
+**Consequences.** No existing solver or `src/core` modified. Browser-verified:
+the baseline example is genuinely INFEASIBLE (ground clearance, anchor sliding,
+utilization — consistent with its 6G "NOT ACCEPTABLE" badge); with those two
+baseline design problems deselected the search is FEASIBLE and honestly shows
+the trade-off — peak tension 2536→888 lbf, but ground clearance −6.3→−19.6 ft
+and speed to its limit. `cuftsObjective.test.ts` (13) covers baseline fidelity,
+determinism, non-mutation, variable mapping, integer rounding, failure
+rejection, tolerance behaviour, and end-to-end optimization over the real solvers.
+
 ## D-021 — 8B coupled dynamics: blank inputs are *not entered*, never 0  (2026-07-30, 8B)
 
 **Decision.** `CoupledDynamicsPanel` (new "Coupled Dynamics" tab) surfaces the

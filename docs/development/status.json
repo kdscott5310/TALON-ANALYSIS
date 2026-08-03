@@ -2,12 +2,12 @@
   "project": "TALON-ANALYSIS",
   "phase": "M6/M7 UI adoption + graphical fixture editor",
   "updated": "2026-07-24",
-  "activePackage": "8C",
+  "activePackage": "8D",
   "phaseComplete": false,
   "baseline": {
-    "tests": 455,
+    "tests": 468,
     "phaseStartTests": 334,
-    "testFiles": 38,
+    "testFiles": 39,
     "buildClean": true,
     "productionAudit": 0,
     "uiModel": "v1 Scenario (src/models)",
@@ -219,8 +219,8 @@
       "packages": [
         { "id": "8A", "title": "Brake curves & stopping simulation", "status": "done", "completedOn": "2026-07-24", "tests": 427, "artifacts": ["src/calculations/brakeStopSim.ts", "src/components/BrakeCurvePanel.tsx", "src/tests/brakeStopSim.test.ts"], "dependsOn": [] },
         { "id": "8B", "title": "Coupled dynamics (wheel inertia + payload pendulum)", "status": "done", "completedOn": "2026-07-30", "tests": 455, "artifacts": ["src/components/CoupledDynamicsPanel.tsx", "src/tests/coupledDynamicsUi.test.ts"], "dependsOn": [] },
-        { "id": "8C", "title": "Optimization over CUFTS parameters (+ objective adapter)", "status": "active", "dependsOn": [] },
-        { "id": "8D", "title": "Digital twin (measured-data correlation)", "status": "todo", "dependsOn": [] }
+        { "id": "8C", "title": "Optimization over CUFTS parameters (+ objective adapter)", "status": "done", "completedOn": "2026-07-30", "tests": 468, "artifacts": ["src/calculations/cuftsObjective.ts", "src/components/OptimizationPanel.tsx", "src/tests/cuftsObjective.test.ts"], "dependsOn": [] },
+        { "id": "8D", "title": "Digital twin (measured-data correlation)", "status": "active", "dependsOn": [] }
       ]
     },
     {
