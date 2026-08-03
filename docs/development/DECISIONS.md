@@ -26,6 +26,43 @@ in a shared Git repo ("latest draft" = latest pull); standards sync first, then
 project drafts. A real-time multi-user backend was explicitly deferred (hosting/
 auth/cost/security review; I also cannot create accounts or enter credentials).
 
+## D-023 — 8D digital twin: synthetic demo for pre-data use, labelled example-only (closes M8)  (2026-07-30, 8D)
+
+**Decision.** `calculations/channelCsv.ts` (NEW, additive) imports measured
+channels from CSV; `DigitalTwinPanel` ("Digital Twin" tab) conditions them
+non-destructively, correlates predicted vs measured (RMSE, peak/timing/integral
+error, R², overlay + residual plots), and runs parameter estimation with
+identifiability reporting. The correlation engine `testCorrelation.ts` is NOT
+modified.
+
+**Built for "no data yet" (user constraint).** The user has no measured test data
+yet, so the panel ships two paths: the real CSV import for when data arrives, and
+a **built-in synthetic demo** so the workflow is exercisable now. The synthetic
+channel is deterministic (seeded LCG — no `Math.random`, Rule 9), named
+"…(EXAMPLE ONLY)", carries a persistent **"SYNTHETIC — EXAMPLE ONLY, NOT MEASURED
+DATA"** badge, and its estimation results add "these parameters were fitted to
+SYNTHETIC example data and mean nothing physically". A correlation against it can
+never read as validating a design (Rule 4). The empty state documents the
+expected CSV shape rather than leaving the user guessing.
+
+**Raw preservation (Rule 5).** `channel.raw` and the original file text are kept
+exactly as imported; conditioning (scale/polarity/zero) and filtering always
+return NEW arrays. The panel displays raw-vs-conditioned first samples side by
+side so the non-destructiveness is visible. A blank cell is a parse **error**,
+never a silent 0 (Rules 3/4); non-monotonic time, missing header, and short files
+are rejected with reasons; a sparse sample rate warns rather than being trusted.
+
+**Consequences.** No existing solver or `src/core` modified. Browser-verified
+end-to-end: empty state + format guidance; synthetic load shows the badge and 2
+plots; the default model correlates poorly (R² −0.05, honest); estimation then
+recovers the generator's true values — amplitude 0.99929 (1.0), decay 0.34974
+(0.35), frequency 0.49972 (0.5) — RMSE 0.277→0.0084 (to the 3% noise floor), all
+flagged identifiable. `channelCsv.test.ts` (11) pins parsing, blank-cell
+rejection, raw preservation under conditioning+filtering, synthetic determinism
+and labelling, near-perfect correlation of a matching model, known-parameter
+recovery, and the UNIDENTIFIABLE flag for a parameter the data cannot constrain.
+**M8 complete — all four requested analysis capabilities delivered.**
+
 ## D-022 — 8C optimization: additive objective adapter + disclosed feasibility tolerance  (2026-07-30, 8C)
 
 **Decision.** `calculations/cuftsObjective.ts` (NEW, pure, additive) bridges the

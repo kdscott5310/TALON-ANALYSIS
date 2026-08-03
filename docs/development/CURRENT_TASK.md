@@ -1,74 +1,68 @@
 # Current Task
 
-> **Active package: `8D` — Digital twin (measured-data correlation)**
-> Final package of M8, and the last of the four analysis capabilities the user
-> requested. Only 8D is active.
+> **No active package.** Milestones 6, 7, 8 and 9 are all COMPLETE.
+> Pick the next piece of work, write its brief here, and set the active pointer
+> in `status.json` before implementing.
 
-## Completed in this phase
+## Delivered
 
-- **8A** brake curves & stopping simulation ("Brake Curves" tab).
-- **8B** coupled dynamics — wheel inertia + payload pendulum ("Coupled
-  Dynamics" tab).
-- **8C — Optimization — DONE (2026-07-30).** `calculations/cuftsObjective.ts`
-  (additive objective adapter over the validated v1 solvers; baseline vector
-  reproduces v1 results exactly) + `OptimizationPanel` ("Optimization" tab):
-  feasibility, controlling constraints, baseline→optimized metrics, sensitivity,
-  search history, disclosed feasibility tolerance with "at limit" labelling.
-  468 tests. See `DECISIONS.md` D-022.
-- **M9 — Git-based sharing — COMPLETE** (9A standards, 9B project drafts).
-- Milestones 6 & 7 complete.
+**M6 — Generalized platform + graphical fixture editor (6A–6H)** · **M7 —
+Component library + procurement (7A–7E)** · **M8 — Advanced analysis UIs
+(8A–8D)** · **M9 — Git-based sharing (9A–9B)**.
 
-## Objective (8D)
+The four analysis capabilities requested, plus design saving and standards
+sharing:
 
-Give the digital-twin engine (`calculations/testCorrelation.ts`) a UI: import
-measured test channels, correlate predicted vs measured (RMSE, peak error,
-timing error, R², residuals), and run parameter estimation to calibrate a model
-against real data — with identifiability warnings. **Raw measured data is never
-overwritten** (Rule: M16 governance).
+| Capability | Tab | Package |
+|---|---|---|
+| Brake curves & stopping simulation | Brake Curves | 8A |
+| Coupled dynamics (wheel inertia + payload pendulum) | Coupled Dynamics | 8B |
+| Design optimization | Optimization | 8C |
+| Digital twin (measured-data correlation) | Digital Twin | 8D |
+| Shared engineering standards (Git-versioned) | Standards | 9A |
+| Named project drafts, save/load/export | Fixture Editor | 9B |
 
-## In scope
+479 tests, 40 files. Build clean, production audit 0. The validated v1 CUFTS UI
+and its Level-1 results are unchanged throughout — proven by the exact-equality
+regression (6H) and the optimizer's baseline-fidelity assertion (8C).
+Decisions D-001…D-023.
 
-1. Import measured channel data (CSV: time + one or more channels). Preserve the
-   RAW file/text separately from any conditioned copy (Rule 5) — conditioning
-   (scale/polarity/zero offset, filtering) must not destroy the original.
-2. Correlate a predicted signal against a measured one: RMSE, peak error,
-   peak-value error, timing error (best time-shift alignment), integral/energy
-   error, R², plus a residual plot and an overlay plot.
-3. Parameter estimation: recover a calibration parameter by minimizing RMSE, and
-   surface the engine's **identifiability warning** when the data cannot
-   constrain the parameter — never present an unidentifiable fit as confident.
-4. Label calibrated results as derived-from-test and still preliminary; never
-   certified.
-5. Tests per `TEST_REQUIREMENTS.md` §8D (add a section).
+## Known state / carry-forwards
 
-## Out of scope
+- **Digital twin has no real data yet** (user). The panel ships a deterministic,
+  clearly-labelled synthetic demo so the workflow is exercisable; swap in a real
+  CSV (header row, time in seconds first column, one column per channel) when
+  test data exists.
+- **The example CUFTS scenario is genuinely infeasible** — ground clearance,
+  anchor sliding, and cable utilization all violate at baseline (consistent with
+  its "NOT ACCEPTABLE" status badge). Optimization correctly refuses to present
+  it as a valid design. Real verified inputs are needed before results mean
+  anything.
+- Migrated CUFTS projects mark wheel inertia, payload damping, brake energy
+  capacity, cable EA/unstretched length as **missing**; the panels report
+  *insufficient information* until entered.
+- **Custom-project analysis** is still deferred (`trussFEM.ts` not wired to
+  custom projects; D-010).
+- **Durable analysis-run history** — 6G runs live in view state only.
+- Sharing is **file + Git** by design (D-017). A real-time multi-user backend
+  remains a separate, larger option (hosting, auth, cost, security review).
 
-- Persisting calibrated scenario copies into the project store (later).
-- Changing the v1 solvers or their results.
-- Auto-applying an estimated parameter back into the design without the user
-  explicitly choosing to.
+## Candidate next work
 
-## Files to read (only these)
+- Wire `trussFEM.ts` to custom projects (with honest applicability when E·A /
+  restraints / loads are missing).
+- Persist analysis runs so a project carries its result history.
+- Feed a real CUFTS dynamics acceleration history into the payload pendulum
+  (8B currently synthesises a braking pulse).
+- Surface remaining engines: nonlinear cable (M8 core), lateral cable (M11),
+  FMEA / hazard register (M14), truss/FEA export (M17).
+- Uncertainty & sensitivity sweeps UI (the other half of M12).
 
-- `src/calculations/testCorrelation.ts` — channel model, conditioning,
-  correlation metrics, parameter estimation, identifiability (do not change).
-- `src/components/BrakeCurvePanel.tsx` — CSV-import + plot pattern to mirror.
-- `src/components/OptimizationPanel.tsx` — results/warnings presentation pattern.
-- `src/units/units.ts` — display conversion.
+## How to start the next package
 
-## Acceptance criteria
-
-- `npm run build` and `npm test` pass (≥ 468 + new 8D tests).
-- Raw imported data is preserved and never mutated by conditioning.
-- Correlation metrics match the engine; an unidentifiable parameter is flagged,
-  not presented as a confident fit.
-- No engineering math in the component (Rules 2/7); no existing
-  `src/calculations/` solver modified; `src/core/` changes additive and recorded.
-
-## Definition of done
-
-1. Code + tests within scope; `npm test` and `npm run build` green.
-2. Decisions recorded in `DECISIONS.md`.
-3. `status.json` and this file advanced to mark 8D DONE — **M8 complete**, and
-   all four requested analysis capabilities delivered.
-4. Single package-scoped commit.
+1. Write the brief here (objective, in/out of scope, files to read, acceptance,
+   DoD), as for 6A–9B.
+2. Set `activePackage` + that package `status: "active"` in `status.json`
+   (clear `phaseComplete`).
+3. Branch `milestone-<id>-<slug>`, implement, test, browser-verify, record a
+   decision, commit, merge to `main`, push.
